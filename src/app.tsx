@@ -1,23 +1,10 @@
 import { Suspense, useState, useCallback } from "react";
-import { Button, Surface, Text, Tabs } from "@cloudflare/kumo";
+import { Button } from "@cloudflare/kumo";
 import { Toasty } from "@cloudflare/kumo/components/toast";
 import { CloudflareLogo } from "@cloudflare/kumo";
-import {
-  SunIcon,
-  MoonIcon,
-  ChatCircleDotsIcon,
-  WaveformIcon,
-  UserCircleIcon,
-  MusicNoteIcon,
-  InfoIcon
-} from "@phosphor-icons/react";
-
-import { VoiceChatTab } from "./tabs/voice-chat";
-import { SoundscapeTab } from "./tabs/soundscape";
-import { CharacterTab } from "./tabs/character";
-import { MusicTab } from "./tabs/music";
-
-type TabId = "voice-chat" | "soundscape" | "character" | "music";
+import { SunIcon, MoonIcon, WaveformIcon } from "@phosphor-icons/react";
+import { CreateView } from "./views/create";
+import { SceneMixer } from "./views/scene-mixer";
 
 function ElevenLabsLogo({ className }: { className?: string }) {
   return (
@@ -73,111 +60,79 @@ function ModeToggle() {
   );
 }
 
+// Simple pathname-based router
+function useRoute(): {
+  view: "create" | "scene";
+  sceneId?: string;
+} {
+  const pathname = window.location.pathname;
+  const match = pathname.match(/^\/scene\/([a-zA-Z0-9-]+)/);
+  if (match) {
+    return { view: "scene", sceneId: match[1] };
+  }
+  return { view: "create" };
+}
+
 export default function App() {
-  const [tab, setTab] = useState<TabId>("voice-chat");
+  const [route, setRoute] = useState(useRoute);
+  const [newScenePrompt, setNewScenePrompt] = useState<string | null>(null);
+
+  const handleGenerate = useCallback(
+    (description: string, layerCount: number) => {
+      const id = crypto.randomUUID();
+      setNewScenePrompt(description);
+      window.history.pushState({}, "", `/scene/${id}`);
+      setRoute({ view: "scene", sceneId: id });
+    },
+    []
+  );
+
+  const handleNavigateHome = useCallback(() => {
+    window.history.pushState({}, "", "/");
+    setRoute({ view: "create" });
+    setNewScenePrompt(null);
+  }, []);
+
+  // Handle browser back/forward
+  if (typeof window !== "undefined") {
+    window.onpopstate = () => {
+      setRoute(useRoute());
+      setNewScenePrompt(null);
+    };
+  }
 
   return (
     <Toasty>
       <div className="flex flex-col h-screen bg-kumo-elevated">
         {/* Header */}
-        <header className="px-5 pt-4 pb-0 bg-kumo-base border-b border-kumo-line">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <ElevenLabsLogo className="w-6 h-6 text-kumo-default" />
-                <span className="text-base font-semibold text-kumo-default">
-                  ElevenLabs
-                </span>
-                <span className="text-kumo-inactive text-lg font-light mx-1">
-                  ×
-                </span>
-                <CloudflareLogo variant="glyph" color="color" className="h-4" />
-                <span className="text-base font-semibold text-kumo-default">
-                  Cloudflare
-                </span>
+        <header className="px-5 py-3 bg-kumo-base border-b border-kumo-line">
+          <div className="max-w-2xl mx-auto flex items-center justify-between">
+            <button
+              onClick={handleNavigateHome}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <WaveformIcon
+                size={20}
+                weight="bold"
+                className="text-kumo-accent"
+              />
+              <span className="text-base font-semibold text-kumo-default">
+                Soundscaper
+              </span>
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-kumo-subtle">
+                <ElevenLabsLogo className="w-4 h-4" />
+                <span className="text-xs">×</span>
+                <CloudflareLogo variant="glyph" color="color" className="h-3" />
               </div>
               <ModeToggle />
             </div>
-
-            <Tabs
-              variant="segmented"
-              value={tab}
-              onValueChange={(v) => setTab(v as TabId)}
-              tabs={[
-                {
-                  value: "voice-chat",
-                  label: (
-                    <span className="flex items-center gap-1.5">
-                      <ChatCircleDotsIcon size={14} /> Voice Chat
-                    </span>
-                  )
-                },
-                {
-                  value: "soundscape",
-                  label: (
-                    <span className="flex items-center gap-1.5">
-                      <WaveformIcon size={14} /> Soundscape
-                    </span>
-                  )
-                },
-                {
-                  value: "character",
-                  label: (
-                    <span className="flex items-center gap-1.5">
-                      <UserCircleIcon size={14} /> Character
-                    </span>
-                  )
-                },
-                {
-                  value: "music",
-                  label: (
-                    <span className="flex items-center gap-1.5">
-                      <MusicNoteIcon size={14} /> Music
-                    </span>
-                  )
-                }
-              ]}
-            />
           </div>
         </header>
 
-        {/* Explainer */}
-        <div className="px-5 pt-4 bg-kumo-elevated">
-          <div className="max-w-4xl mx-auto">
-            <Surface className="p-4 rounded-xl ring ring-kumo-line">
-              <div className="flex gap-3">
-                <InfoIcon
-                  size={20}
-                  weight="bold"
-                  className="text-kumo-accent shrink-0 mt-0.5"
-                />
-                <div>
-                  <Text size="sm" bold>
-                    {tab === "voice-chat" && "Voice Chat"}
-                    {tab === "soundscape" && "Soundscape Builder"}
-                    {tab === "character" && "Character Creator"}
-                    {tab === "music" && "Music Studio"}
-                  </Text>
-                  <span className="mt-1 block">
-                    <Text size="xs" variant="secondary">
-                      {tab === "voice-chat" &&
-                        "Chat with an AI agent powered by Workers AI. Every response is automatically spoken aloud via ElevenLabs TTS. Tap the mic to speak — your audio streams to ElevenLabs Realtime STT with live transcription."}
-                      {tab === "soundscape" &&
-                        "Describe a scene and the AI generates narration (ElevenLabs TTS) plus ambient sound effects (ElevenLabs Sound Effects API). Mix and play them together."}
-                      {tab === "character" &&
-                        "Design a custom AI character — describe a personality and a voice. ElevenLabs Voice Design creates a unique voice, then chat with your character and hear every response spoken."}
-                      {tab === "music" &&
-                        "Compose original music from a text prompt using ElevenLabs Music API. Choose a duration, toggle instrumental mode, and build a library of generated tracks."}
-                    </Text>
-                  </span>
-                </div>
-              </div>
-            </Surface>
-          </div>
-        </div>
-
-        {/* Tab content */}
-        <main className="flex-1 overflow-hidden">
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto">
           <Suspense
             fallback={
               <div className="flex items-center justify-center h-full text-kumo-inactive">
@@ -185,10 +140,18 @@ export default function App() {
               </div>
             }
           >
-            {tab === "voice-chat" && <VoiceChatTab />}
-            {tab === "soundscape" && <SoundscapeTab />}
-            {tab === "character" && <CharacterTab />}
-            {tab === "music" && <MusicTab />}
+            {route.view === "create" && (
+              <CreateView onGenerate={handleGenerate} />
+            )}
+            {route.view === "scene" && route.sceneId && (
+              <SceneMixer
+                key={route.sceneId}
+                sceneId={route.sceneId}
+                isNew={newScenePrompt !== null}
+                initialPrompt={newScenePrompt ?? undefined}
+                onNavigateHome={handleNavigateHome}
+              />
+            )}
           </Suspense>
         </main>
       </div>
