@@ -1,10 +1,24 @@
-import { createWorkersAI } from "workers-ai-provider";
 import { generateText } from "ai";
+import { createWorkersAI } from "workers-ai-provider";
+
+const CODE_BLOCK_PATTERN = /```[\s\S]*?```/g;
+const JSON_OBJECT_PATTERN = /\{[\s\S]*\}/;
 
 export interface LayerPrompt {
   name: string;
   prompt: string;
   type: "sfx" | "music";
+}
+
+interface ParsedLayer {
+  name?: string;
+  prompt?: string;
+  type?: string;
+}
+
+interface ParsedDecomposition {
+  layers?: ParsedLayer[];
+  title?: string;
 }
 
 /**
@@ -32,25 +46,25 @@ Also generate a short, evocative title for this soundscape (3-6 words).
 Scene: "${description}"
 
 Respond with ONLY valid JSON, no markdown fences:
-{"title": "...", "layers": [{"name": "Short Name", "prompt": "detailed sound description for generator", "type": "sfx"}, ...]}`
+{"title": "...", "layers": [{"name": "Short Name", "prompt": "detailed sound description for generator", "type": "sfx"}, ...]}`,
   });
 
   try {
-    const cleaned = text.replace(/```[\s\S]*?```/g, "").trim();
-    const jsonStr = cleaned.match(/\{[\s\S]*\}/)?.[0] ?? "";
-    const parsed = JSON.parse(jsonStr);
+    const cleaned = text.replace(CODE_BLOCK_PATTERN, "").trim();
+    const jsonStr = cleaned.match(JSON_OBJECT_PATTERN)?.[0] ?? "";
+    const parsed = JSON.parse(jsonStr) as ParsedDecomposition;
     return {
       title: parsed.title || description.slice(0, 50),
-      layers: (parsed.layers || []).slice(0, layerCount).map((l: any) => ({
+      layers: (parsed.layers || []).slice(0, layerCount).map((l) => ({
         name: l.name || l.prompt?.slice(0, 20) || "Sound",
         prompt: l.prompt || description,
-        type: l.type === "music" ? "music" : ("sfx" as const)
-      }))
+        type: l.type === "music" ? "music" : ("sfx" as const),
+      })),
     };
   } catch {
     return {
       title: description.slice(0, 50),
-      layers: [{ name: "Ambient", prompt: description, type: "sfx" as const }]
+      layers: [{ name: "Ambient", prompt: description, type: "sfx" as const }],
     };
   }
 }

@@ -15,14 +15,14 @@ export async function generateSfx(
   const audio = await client.textToSoundEffects.convert({
     text: prompt,
     durationSeconds: 10,
-    promptInfluence: 0.5
+    promptInfluence: 0.5,
   });
 
   const buffer = await new Response(audio).arrayBuffer();
   const r2Key = `sfx/${layerId}.mp3`;
 
   await bucket.put(r2Key, buffer, {
-    httpMetadata: { contentType: "audio/mpeg" }
+    httpMetadata: { contentType: "audio/mpeg" },
   });
 
   return { r2Key, duration: 10 };
@@ -37,16 +37,16 @@ export async function generateMusic(
   const client = createClient(apiKey);
   const audio = await client.music.compose({
     prompt: `Ambient background music: ${prompt}`,
-    musicLengthMs: 30000,
+    musicLengthMs: 30_000,
     forceInstrumental: true,
-    outputFormat: "mp3_44100_128"
+    outputFormat: "mp3_44100_128",
   });
 
   const buffer = await new Response(audio).arrayBuffer();
   const r2Key = `music/${layerId}.mp3`;
 
   await bucket.put(r2Key, buffer, {
-    httpMetadata: { contentType: "audio/mpeg" }
+    httpMetadata: { contentType: "audio/mpeg" },
   });
 
   return { r2Key, duration: 30 };

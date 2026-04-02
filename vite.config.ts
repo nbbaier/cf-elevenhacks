@@ -6,10 +6,10 @@ import agents from "agents/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-	plugins: [agents(), react(), cloudflare(), tailwindcss()],
-	resolve: {
-		alias: {
-			"@": path.resolve(__dirname, "./src"),
-		},
-	},
+  plugins: [agents(), react(), cloudflare(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@": path.resolve(import.meta.dirname, "./src"),
+    },
+  },
 });

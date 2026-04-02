@@ -6,20 +6,20 @@
 const CROSSFADE_DURATION = 1.5;
 
 interface LayerPlayback {
-  id: string;
-  gainNode: GainNode;
-  panNode: StereoPannerNode;
-  buffer: AudioBuffer | null;
-  volume: number;
-  enabled: boolean;
-  activeSource: AudioBufferSourceNode | null;
   activeFadeGain: GainNode | null;
+  activeSource: AudioBufferSourceNode | null;
+  buffer: AudioBuffer | null;
   crossfadeTimer: ReturnType<typeof setTimeout> | null;
+  enabled: boolean;
+  gainNode: GainNode;
+  id: string;
+  panNode: StereoPannerNode;
+  volume: number;
 }
 
 export class PlaybackEngine {
   private ctx: AudioContext | null = null;
-  private layers: Map<string, LayerPlayback> = new Map();
+  private readonly layers: Map<string, LayerPlayback> = new Map();
   private _playing = false;
 
   private getContext(): AudioContext {
@@ -66,7 +66,7 @@ export class PlaybackEngine {
       enabled,
       activeSource: null,
       activeFadeGain: null,
-      crossfadeTimer: null
+      crossfadeTimer: null,
     };
 
     this.layers.set(id, layer);
@@ -78,13 +78,17 @@ export class PlaybackEngine {
 
   /** Start the crossfade loop for a single layer. */
   private startLayerLoop(layer: LayerPlayback): void {
-    if (!layer.buffer || !layer.enabled) return;
+    if (!(layer.buffer && layer.enabled)) {
+      return;
+    }
     const ctx = this.getContext();
     const duration = layer.buffer.duration;
     const fadeTime = Math.min(CROSSFADE_DURATION, duration / 3);
 
     const scheduleInstance = () => {
-      if (!layer.buffer || !this._playing || !layer.enabled) return;
+      if (!(layer.buffer && this._playing && layer.enabled)) {
+        return;
+      }
 
       const source = ctx.createBufferSource();
       source.buffer = layer.buffer;
@@ -145,7 +149,9 @@ export class PlaybackEngine {
   /** Remove a layer entirely. */
   removeLayer(id: string): void {
     const layer = this.layers.get(id);
-    if (!layer) return;
+    if (!layer) {
+      return;
+    }
 
     this.stopLayerLoop(layer);
     try {
@@ -158,7 +164,9 @@ export class PlaybackEngine {
   /** Update a layer's volume. */
   updateLayerVolume(id: string, volume: number): void {
     const layer = this.layers.get(id);
-    if (!layer) return;
+    if (!layer) {
+      return;
+    }
     layer.volume = volume;
     if (layer.enabled) {
       layer.gainNode.gain.setTargetAtTime(
@@ -172,18 +180,18 @@ export class PlaybackEngine {
   /** Update a layer's stereo pan (-1 to 1). */
   updateLayerPan(id: string, pan: number): void {
     const layer = this.layers.get(id);
-    if (!layer) return;
-    layer.panNode.pan.setTargetAtTime(
-      pan,
-      this.getContext().currentTime,
-      0.05
-    );
+    if (!layer) {
+      return;
+    }
+    layer.panNode.pan.setTargetAtTime(pan, this.getContext().currentTime, 0.05);
   }
 
   /** Enable or disable a layer. */
   updateLayerEnabled(id: string, enabled: boolean): void {
     const layer = this.layers.get(id);
-    if (!layer) return;
+    if (!layer) {
+      return;
+    }
     layer.enabled = enabled;
 
     if (enabled && this._playing) {
@@ -205,7 +213,7 @@ export class PlaybackEngine {
 
   /** Check if a layer's audio is loaded. */
   hasLayer(id: string): boolean {
-    return this.layers.has(id) && this.layers.get(id)!.buffer !== null;
+    return this.layers.has(id) && this.layers.get(id)?.buffer !== null;
   }
 
   /** Start playback of all enabled layers. */

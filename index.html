@@ -1,17 +1,20 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="/favicon.ico" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.ico">
     <title>Soundscaper — AI Ambient Soundscapes</title>
     <script>
-      (() => {
-        const stored = localStorage.getItem("theme");
-        const mode = stored || "light";
-        if (mode === "dark") document.documentElement.classList.add("dark");
-        document.documentElement.style.colorScheme = mode;
-      })();
+    "use strict";
+    (() => {
+      const stored = localStorage.getItem("theme");
+      const mode = stored || "light";
+      if (mode === "dark") {
+        document.documentElement.classList.add("dark");
+      }
+      document.documentElement.style.colorScheme = mode;
+    })();
     </script>
   </head>
   <body>

@@ -1,11 +1,13 @@
 import { routeAgentRequest } from "agents";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { eq, desc } from "drizzle-orm";
+import { GalleryAgent } from "./agents/gallery";
+import { SceneAgent } from "./agents/scene";
 import { createAuth } from "./lib/auth";
 import { userScenes } from "./lib/auth-schema";
 
-export { SceneAgent } from "./agents/scene";
-export { GalleryAgent } from "./agents/gallery";
+// biome-ignore lint/performance/noBarrelFile: Cloudflare requires these Durable Object exports from the Worker entry module.
+export { GalleryAgent, SceneAgent };
 
 export default {
   async fetch(request: Request, env: Env) {
@@ -76,7 +78,7 @@ export default {
         sceneId: string;
         title: string;
       };
-      if (!sceneId || !title) {
+      if (!(sceneId && title)) {
         return new Response("Bad request", { status: 400 });
       }
 
@@ -124,14 +126,16 @@ export default {
         return new Response("Bad request", { status: 400 });
       }
       const object = await env.AUDIO_BUCKET.get(key);
-      if (!object) return new Response("Not found", { status: 404 });
+      if (!object) {
+        return new Response("Not found", { status: 404 });
+      }
 
       return new Response(object.body, {
         headers: {
           "Content-Type": "audio/mpeg",
           "Cache-Control": "public, max-age=31536000, immutable",
-          "Access-Control-Allow-Origin": "*"
-        }
+          "Access-Control-Allow-Origin": "*",
+        },
       });
     }
 
@@ -140,5 +144,5 @@ export default {
       (await routeAgentRequest(request, env)) ||
       new Response("Not found", { status: 404 })
     );
-  }
+  },
 } satisfies ExportedHandler<Env>;

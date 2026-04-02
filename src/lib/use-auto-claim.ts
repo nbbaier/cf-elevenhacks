@@ -11,11 +11,15 @@ export function useAutoClaimScenes() {
   const claimedRef = useRef(false);
 
   useEffect(() => {
-    if (!session?.user?.id || claimedRef.current) return;
+    if (!session?.user?.id || claimedRef.current) {
+      return;
+    }
     claimedRef.current = true;
 
     const scenes = getOwnedScenes();
-    if (scenes.length === 0) return;
+    if (scenes.length === 0) {
+      return;
+    }
 
     fetch("/api/claim-scenes", {
       method: "POST",

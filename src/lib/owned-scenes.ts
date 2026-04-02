@@ -4,9 +4,9 @@
  */
 
 export interface OwnedScene {
+  createdAt: string;
   id: string;
   title: string;
-  createdAt: string;
 }
 
 const STORAGE_KEY = "ownedScenes";
@@ -15,15 +15,21 @@ const STORAGE_KEY = "ownedScenes";
 export function getOwnedScenes(): OwnedScene[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) {
+      return [];
+    }
     const parsed = JSON.parse(raw);
 
     // Backward compat: old format was string[]
-    if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === "string") {
+    if (
+      Array.isArray(parsed) &&
+      parsed.length > 0 &&
+      typeof parsed[0] === "string"
+    ) {
       const migrated: OwnedScene[] = (parsed as string[]).map((id) => ({
         id,
         title: "Untitled Soundscape",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
       return migrated;
@@ -48,10 +54,15 @@ export function addOwnedScene(id: string, title: string, createdAt: string) {
 }
 
 /** Update the title of an owned scene (e.g. after the user renames it). */
-export function updateOwnedScene(id: string, updates: Partial<Pick<OwnedScene, "title">>) {
+export function updateOwnedScene(
+  id: string,
+  updates: Partial<Pick<OwnedScene, "title">>
+) {
   const scenes = getOwnedScenes();
   const idx = scenes.findIndex((s) => s.id === id);
-  if (idx === -1) return;
+  if (idx === -1) {
+    return;
+  }
   scenes[idx] = { ...scenes[idx], ...updates };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(scenes));
 }

@@ -1,38 +1,35 @@
 import { Agent, callable } from "agents";
+import { generateMusic, generateSfx } from "../services/audio-generation";
 import { decomposeScene } from "../services/decomposition";
-import {
-  generateSfx,
-  generateMusic
-} from "../services/audio-generation";
 
 export interface Layer {
-  id: string;
-  prompt: string;
-  name: string;
-  type: "sfx" | "music";
-  r2Key: string;
-  volume: number;
-  pan: number;
-  enabled: boolean;
   duration: number;
+  enabled: boolean;
+  id: string;
+  name: string;
   order: number;
+  pan: number;
+  prompt: string;
+  r2Key: string;
+  type: "sfx" | "music";
+  volume: number;
 }
 
 export interface SceneData {
-  id: string;
-  title: string;
   authorName: string | null;
   createdAt: string;
   forkedFrom: string | null;
+  id: string;
   isPublic: boolean;
   ownerId: string | null;
+  title: string;
 }
 
 export interface SceneState {
-  scene: SceneData | null;
-  layers: Layer[];
   generating: boolean;
   generationProgress: { completed: number; total: number } | null;
+  layers: Layer[];
+  scene: SceneData | null;
 }
 
 /**
@@ -45,21 +42,18 @@ export class SceneAgent extends Agent<Env, SceneState> {
     scene: null,
     layers: [],
     generating: false,
-    generationProgress: null
+    generationProgress: null,
   };
 
   /** Generate a full scene from a text description. */
   @callable()
-  async generateScene(
-    description: string,
-    layerCount: number = 5
-  ): Promise<void> {
+  async generateScene(description: string, layerCount = 5): Promise<void> {
     const sceneId = this.name;
 
     this.setState({
       ...this.state,
       generating: true,
-      generationProgress: { completed: 0, total: layerCount }
+      generationProgress: { completed: 0, total: layerCount },
     });
 
     // Decompose scene into layer prompts via Workers AI
@@ -72,7 +66,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       createdAt: new Date().toISOString(),
       forkedFrom: null,
       isPublic: false,
-      ownerId: this.state.scene?.ownerId ?? null
+      ownerId: this.state.scene?.ownerId ?? null,
     };
 
     // Create layer shells (no audio yet)
@@ -86,7 +80,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       pan: 0,
       enabled: true,
       duration: 0,
-      order: i
+      order: i,
     }));
 
     this.setState({
@@ -94,7 +88,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       scene,
       layers,
       generating: true,
-      generationProgress: { completed: 0, total: layers.length }
+      generationProgress: { completed: 0, total: layers.length },
     });
 
     // Generate audio for all layers in parallel
@@ -127,7 +121,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
         scene,
         layers: [...layers],
         generating: true,
-        generationProgress: { completed, total: layers.length }
+        generationProgress: { completed, total: layers.length },
       });
     });
 
@@ -138,7 +132,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       scene,
       layers: [...layers],
       generating: false,
-      generationProgress: null
+      generationProgress: null,
     });
   }
 
@@ -160,13 +154,13 @@ export class SceneAgent extends Agent<Env, SceneState> {
       pan: 0,
       enabled: true,
       duration: 0,
-      order: this.state.layers.length
+      order: this.state.layers.length,
     };
 
     this.setState({
       ...this.state,
       layers: [...this.state.layers, layer],
-      generating: true
+      generating: true,
     });
 
     try {
@@ -192,7 +186,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
             ? { ...l, r2Key: gen.r2Key, duration: gen.duration }
             : l
         ),
-        generating: false
+        generating: false,
       });
     } catch (e) {
       console.error("Failed to generate layer:", e);
@@ -203,12 +197,11 @@ export class SceneAgent extends Agent<Env, SceneState> {
   /** Regenerate a layer's audio, optionally with a new prompt. */
   /** Regenerate a layer's audio, optionally with a new prompt. */
   @callable()
-  async regenerateLayer(
-    layerId: string,
-    newPrompt?: string
-  ): Promise<void> {
+  async regenerateLayer(layerId: string, newPrompt?: string): Promise<void> {
     const layer = this.state.layers.find((l) => l.id === layerId);
-    if (!layer) throw new Error("Layer not found");
+    if (!layer) {
+      throw new Error("Layer not found");
+    }
 
     const prompt = newPrompt || layer.prompt;
     const newLayerId = crypto.randomUUID();
@@ -218,10 +211,8 @@ export class SceneAgent extends Agent<Env, SceneState> {
     this.setState({
       ...this.state,
       layers: this.state.layers.map((l) =>
-        l.id === layerId
-          ? { ...l, id: newLayerId, prompt, r2Key: "" }
-          : l
-      )
+        l.id === layerId ? { ...l, id: newLayerId, prompt, r2Key: "" } : l
+      ),
     });
 
     // Delete old audio from R2
@@ -255,7 +246,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
           l.id === newLayerId
             ? { ...l, r2Key: gen.r2Key, duration: gen.duration }
             : l
-        )
+        ),
       });
     } catch (e) {
       console.error("Failed to regenerate layer:", e);
@@ -271,43 +262,45 @@ export class SceneAgent extends Agent<Env, SceneState> {
     }
     this.setState({
       ...this.state,
-      layers: this.state.layers.filter((l) => l.id !== layerId)
+      layers: this.state.layers.filter((l) => l.id !== layerId),
     });
   }
 
   /** Update layer settings (volume, pan, enabled, name). */
   @callable()
-  async updateLayer(
+  updateLayer(
     layerId: string,
     updates: Partial<Pick<Layer, "volume" | "pan" | "enabled" | "name">>
-  ): Promise<void> {
+  ): void {
     this.setState({
       ...this.state,
       layers: this.state.layers.map((l) =>
         l.id === layerId ? { ...l, ...updates } : l
-      )
+      ),
     });
   }
 
   /** Update scene metadata (title, author name). */
   @callable()
-  async updateScene(
-    updates: Partial<Pick<SceneData, "title" | "authorName">>
-  ): Promise<void> {
-    if (!this.state.scene) return;
+  updateScene(updates: Partial<Pick<SceneData, "title" | "authorName">>): void {
+    if (!this.state.scene) {
+      return;
+    }
     this.setState({
       ...this.state,
-      scene: { ...this.state.scene, ...updates }
+      scene: { ...this.state.scene, ...updates },
     });
   }
 
   /** Make the scene publicly shareable. Returns the scene ID. */
   @callable()
   async publish(): Promise<string> {
-    if (!this.state.scene) throw new Error("No scene to publish");
+    if (!this.state.scene) {
+      throw new Error("No scene to publish");
+    }
     this.setState({
       ...this.state,
-      scene: { ...this.state.scene, isPublic: true }
+      scene: { ...this.state.scene, isPublic: true },
     });
 
     // Register with Gallery DO
@@ -317,7 +310,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       id: this.state.scene.id,
       title: this.state.scene.title,
       authorName: this.state.scene.authorName,
-      createdAt: this.state.scene.createdAt
+      createdAt: this.state.scene.createdAt,
     });
 
     return this.state.scene.id;
@@ -326,10 +319,12 @@ export class SceneAgent extends Agent<Env, SceneState> {
   /** Unpublish the scene and remove from Gallery. */
   @callable()
   async unpublish(): Promise<void> {
-    if (!this.state.scene) throw new Error("No scene to unpublish");
+    if (!this.state.scene) {
+      throw new Error("No scene to unpublish");
+    }
     this.setState({
       ...this.state,
-      scene: { ...this.state.scene, isPublic: false }
+      scene: { ...this.state.scene, isPublic: false },
     });
 
     const galleryId = this.env.GalleryAgent.idFromName("gallery");
@@ -339,23 +334,29 @@ export class SceneAgent extends Agent<Env, SceneState> {
 
   /** Get full scene data (used by fork flow). */
   @callable()
-  async getSceneData(): Promise<{
+  getSceneData(): {
     scene: SceneData | null;
     layers: Layer[];
-  }> {
+  } {
     return { scene: this.state.scene, layers: this.state.layers };
   }
 
   /** Claim ownership of this scene for a user. Only works if unclaimed or already owned by the same user. */
   @callable()
-  async claimScene(userId: string): Promise<boolean> {
-    if (!this.state.scene) return false;
+  claimScene(userId: string): boolean {
+    if (!this.state.scene) {
+      return false;
+    }
     const currentOwner = this.state.scene.ownerId ?? null;
-    if (currentOwner && currentOwner !== userId) return false;
-    if (currentOwner === userId) return true;
+    if (currentOwner && currentOwner !== userId) {
+      return false;
+    }
+    if (currentOwner === userId) {
+      return true;
+    }
     this.setState({
       ...this.state,
-      scene: { ...this.state.scene, ownerId: userId }
+      scene: { ...this.state.scene, ownerId: userId },
     });
     return true;
   }
@@ -374,13 +375,15 @@ export class SceneAgent extends Agent<Env, SceneState> {
       createdAt: new Date().toISOString(),
       forkedFrom: sourceSceneId,
       isPublic: false,
-      ownerId: null
+      ownerId: null,
     };
 
     // Copy R2 objects so each scene owns its own audio files
     const forkedLayers = await Promise.all(
       sourceLayers.map(async (l) => {
-        if (!l.r2Key) return { ...l };
+        if (!l.r2Key) {
+          return { ...l };
+        }
         const prefix = l.type === "music" ? "music" : "sfx";
         const newKey = `${prefix}/${crypto.randomUUID()}.mp3`;
         const srcObj = await this.env.AUDIO_BUCKET.get(l.r2Key);
@@ -396,7 +399,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       scene,
       layers: forkedLayers,
       generating: false,
-      generationProgress: null
+      generationProgress: null,
     });
   }
 }

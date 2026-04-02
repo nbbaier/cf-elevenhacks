@@ -1,7 +1,15 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { drizzle } from "drizzle-orm/d1";
-import * as schema from "./auth-schema";
+import {
+  account,
+  session,
+  user,
+  userScenes,
+  verification,
+} from "./auth-schema";
+
+const schema = { account, session, user, userScenes, verification };
 
 export function createAuth(env: Env, request: Request) {
   const db = drizzle(env.AUTH_DB, { schema });
