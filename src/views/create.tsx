@@ -33,7 +33,7 @@ const PRESETS = [
 
 export function CreateView({ onGenerate, onNavigateToScene }: CreateViewProps) {
   const [description, setDescription] = useState("");
-  const [layerCount, setLayerCount] = useState(5);
+  const [layerCount, setLayerCount] = useState(4);
   const [ownedScenes, setOwnedScenes] = useState<OwnedScene[]>(() =>
     getOwnedScenes()
   );
@@ -79,12 +79,14 @@ export function CreateView({ onGenerate, onNavigateToScene }: CreateViewProps) {
 
         {/* Layer count */}
         <div className="flex items-center justify-between">
-          <p className="text-muted-foreground text-xs">Number of layers</p>
+          <p className="text-muted-foreground text-xs">
+            Number of starter layers
+          </p>
           <div className="flex items-center gap-3">
             <Button
               aria-label="Decrease layers"
-              disabled={layerCount <= 4}
-              onClick={() => setLayerCount((c) => Math.max(4, c - 1))}
+              disabled={layerCount <= 3}
+              onClick={() => setLayerCount((c) => Math.max(3, c - 1))}
               size="icon-xs"
               variant="secondary"
             >
@@ -95,8 +97,8 @@ export function CreateView({ onGenerate, onNavigateToScene }: CreateViewProps) {
             </span>
             <Button
               aria-label="Increase layers"
-              disabled={layerCount >= 6}
-              onClick={() => setLayerCount((c) => Math.min(6, c + 1))}
+              disabled={layerCount >= 4}
+              onClick={() => setLayerCount((c) => Math.min(4, c + 1))}
               size="icon-xs"
               variant="secondary"
             >

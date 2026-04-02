@@ -10,7 +10,8 @@ export async function generateSfx(
   bucket: R2Bucket,
   layerId: string,
   prompt: string
-): Promise<{ r2Key: string; duration: number }> {
+): Promise<{ duration: number; generationMs: number; r2Key: string }> {
+  const startedAt = Date.now();
   const client = createClient(apiKey);
   const audio = await client.textToSoundEffects.convert({
     text: prompt,
@@ -18,14 +19,19 @@ export async function generateSfx(
     promptInfluence: 0.5,
   });
 
-  const buffer = await new Response(audio).arrayBuffer();
   const r2Key = `sfx/${layerId}.mp3`;
 
-  await bucket.put(r2Key, buffer, {
+  await bucket.put(r2Key, audio, {
     httpMetadata: { contentType: "audio/mpeg" },
   });
 
-  return { r2Key, duration: 10 };
+  console.info("generateSfx completed", {
+    durationMs: Date.now() - startedAt,
+    layerId,
+    r2Key,
+  });
+
+  return { r2Key, duration: 10, generationMs: Date.now() - startedAt };
 }
 
 export async function generateMusic(
@@ -33,7 +39,8 @@ export async function generateMusic(
   bucket: R2Bucket,
   layerId: string,
   prompt: string
-): Promise<{ r2Key: string; duration: number }> {
+): Promise<{ duration: number; generationMs: number; r2Key: string }> {
+  const startedAt = Date.now();
   const client = createClient(apiKey);
   const audio = await client.music.compose({
     prompt: `Ambient background music: ${prompt}`,
@@ -42,12 +49,17 @@ export async function generateMusic(
     outputFormat: "mp3_44100_128",
   });
 
-  const buffer = await new Response(audio).arrayBuffer();
   const r2Key = `music/${layerId}.mp3`;
 
-  await bucket.put(r2Key, buffer, {
+  await bucket.put(r2Key, audio, {
     httpMetadata: { contentType: "audio/mpeg" },
   });
 
-  return { r2Key, duration: 30 };
+  console.info("generateMusic completed", {
+    durationMs: Date.now() - startedAt,
+    layerId,
+    r2Key,
+  });
+
+  return { r2Key, duration: 30, generationMs: Date.now() - startedAt };
 }

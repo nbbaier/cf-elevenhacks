@@ -38,6 +38,8 @@ interface SceneMixerProps {
   sceneId: string;
 }
 
+const PLAYABLE_LAYER_THRESHOLD = 2;
+
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: component manages many coordinated states
 export function SceneMixer({
   sceneId,
@@ -59,6 +61,7 @@ export function SceneMixer({
   const [playing, setPlaying] = useState(false);
   const [generationTriggered, setGenerationTriggered] = useState(false);
   const engineRef = useRef<PlaybackEngine | null>(null);
+  const lastSyncedSceneKeyRef = useRef<string | null>(null);
 
   const { data: session } = useSession();
   const isOwner = isOwnedScene(sceneId);
@@ -74,7 +77,11 @@ export function SceneMixer({
   const scene = state?.scene ?? null;
   const layers = state?.layers ?? [];
   const generating = state?.generating ?? false;
+  const generationPhase = state?.generationPhase ?? null;
   const progress = state?.generationProgress ?? null;
+  const hasScene = scene !== null;
+  const sceneOwnerId = scene?.ownerId ?? null;
+  const sceneTitle = scene?.title ?? null;
 
   // Trigger generation for new scenes
   useEffect(() => {
@@ -111,28 +118,33 @@ export function SceneMixer({
 
   // Sync scene to D1 user_scenes index when signed in
   useEffect(() => {
-    if (
-      scene &&
-      session?.user?.id &&
-      (isOwner || scene.ownerId === session.user.id)
-    ) {
-      fetch("/api/my-scenes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ sceneId, title: scene.title }),
-      }).catch(() => {
-        // intentional: fire-and-forget sync
-      });
+    if (!(hasScene && session?.user?.id && sceneTitle)) {
+      return;
     }
-  }, [
-    scene?.title,
-    sceneId,
-    session?.user?.id,
-    isOwner,
-    scene?.ownerId,
-    scene,
-  ]);
+
+    if (!(isOwner || sceneOwnerId === session.user.id)) {
+      return;
+    }
+
+    const syncKey = `${sceneId}:${session.user.id}:${sceneTitle}`;
+    if (lastSyncedSceneKeyRef.current === syncKey) {
+      return;
+    }
+
+    lastSyncedSceneKeyRef.current = syncKey;
+
+    fetch("/api/my-scenes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ sceneId, title: sceneTitle }),
+    }).catch(() => {
+      // Allow a retry on the next qualifying state change.
+      if (lastSyncedSceneKeyRef.current === syncKey) {
+        lastSyncedSceneKeyRef.current = null;
+      }
+    });
+  }, [hasScene, sceneOwnerId, sceneTitle, sceneId, session?.user?.id, isOwner]);
 
   // Initialize playback engine
   useEffect(() => {
@@ -363,6 +375,13 @@ export function SceneMixer({
   }, [connected, sceneId, agent, session?.user?.id]);
 
   const readyLayers = layers.filter((l) => l.r2Key);
+  const readyLayerCount = readyLayers.length;
+  const playableThreshold = Math.min(
+    PLAYABLE_LAYER_THRESHOLD,
+    progress?.total ?? PLAYABLE_LAYER_THRESHOLD
+  );
+  const isPlayableWhileGenerating =
+    generating && readyLayerCount >= playableThreshold;
 
   let titleMode: "editing" | "editable" | "readonly";
   if (editingTitle && isOwner) {
@@ -385,6 +404,16 @@ export function SceneMixer({
   let progressText: string;
   if (!progress) {
     progressText = "Designing your soundscape...";
+  } else if (generationPhase === "decomposing") {
+    progressText = "Planning your soundscape...";
+  } else if (isPlayableWhileGenerating && progress.completed < progress.total) {
+    const remainingLayers = Math.max(progress.total - readyLayerCount, 0);
+    progressText =
+      remainingLayers > 0
+        ? `Playable now. Finishing ${remainingLayers} more ${
+            remainingLayers === 1 ? "layer" : "layers"
+          } in the background.`
+        : "Playable now. Finalizing your soundscape...";
   } else if (progress.completed === 0) {
     progressText = "Generating audio layers...";
   } else {
@@ -592,7 +621,11 @@ export function SceneMixer({
           style={{ animationDelay: "0.1s" }}
         >
           <div className="flex items-center gap-3">
-            <SpinnerIcon className="animate-spin text-primary" size={18} />
+            {isPlayableWhileGenerating ? (
+              <WaveformIcon className="text-primary" size={18} />
+            ) : (
+              <SpinnerIcon className="animate-spin text-primary" size={18} />
+            )}
             <p className="flex-1 font-medium text-foreground text-sm">
               {progressText}
             </p>

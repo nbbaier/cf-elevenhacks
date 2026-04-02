@@ -27,6 +27,7 @@ export interface SceneData {
 
 export interface SceneState {
   generating: boolean;
+  generationPhase: "decomposing" | "generating" | null;
   generationProgress: { completed: number; total: number } | null;
   generationTaskId: string | null;
   layers: Layer[];
@@ -43,6 +44,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
     scene: null,
     layers: [],
     generating: false,
+    generationPhase: null,
     generationProgress: null,
     generationTaskId: null,
   };
@@ -56,6 +58,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
     this.setState({
       ...this.state,
       generating: false,
+      generationPhase: null,
       generationProgress: null,
       generationTaskId: null,
     });
@@ -63,13 +66,20 @@ export class SceneAgent extends Agent<Env, SceneState> {
 
   /** Generate a full scene from a text description. */
   @callable()
-  async generateScene(description: string, layerCount = 5): Promise<void> {
+  async generateScene(description: string, layerCount = 4): Promise<void> {
+    const startedAt = Date.now();
     const sceneId = this.name;
     const taskId = crypto.randomUUID();
+
+    console.info("generateScene started", {
+      layerCount,
+      sceneId,
+    });
 
     this.setState({
       ...this.state,
       generating: true,
+      generationPhase: "decomposing",
       generationProgress: { completed: 0, total: layerCount },
       generationTaskId: taskId,
     });
@@ -106,6 +116,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       scene,
       layers,
       generating: true,
+      generationPhase: "generating",
       generationProgress: { completed: 0, total: layers.length },
     });
 
@@ -118,6 +129,13 @@ export class SceneAgent extends Agent<Env, SceneState> {
       }
 
       try {
+        console.info("generateScene layer started", {
+          layerId: layer.id,
+          layerName: layer.name,
+          sceneId,
+          type: layer.type,
+        });
+
         const gen =
           layer.type === "music"
             ? await generateMusic(
@@ -139,6 +157,16 @@ export class SceneAgent extends Agent<Env, SceneState> {
         }
 
         layers[i] = { ...layers[i], r2Key: gen.r2Key, duration: gen.duration };
+
+        console.info("generateScene layer completed", {
+          duration: gen.duration,
+          generationMs: gen.generationMs,
+          layerId: layer.id,
+          layerName: layer.name,
+          r2Key: gen.r2Key,
+          sceneId,
+          type: layer.type,
+        });
       } catch (e) {
         console.error(`Failed to generate layer ${layer.name}:`, e);
       }
@@ -157,11 +185,18 @@ export class SceneAgent extends Agent<Env, SceneState> {
 
     // Only finalize if this task wasn't cancelled
     if (this.state.generationTaskId === taskId) {
+      console.info("generateScene completed", {
+        durationMs: Date.now() - startedAt,
+        layerCount: layers.length,
+        sceneId,
+      });
+
       this.setState({
         ...this.state,
         scene,
         layers: [...layers],
         generating: false,
+        generationPhase: null,
         generationProgress: null,
         generationTaskId: null,
       });
@@ -194,6 +229,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       ...this.state,
       layers: [...this.state.layers, layer],
       generating: true,
+      generationPhase: "generating",
       generationTaskId: taskId,
     });
 
@@ -225,6 +261,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
             : l
         ),
         generating: false,
+        generationPhase: null,
         generationTaskId: null,
       });
     } catch (e) {
@@ -233,6 +270,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
         this.setState({
           ...this.state,
           generating: false,
+          generationPhase: null,
           generationTaskId: null,
         });
       }
@@ -258,6 +296,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       layers: this.state.layers.map((l) =>
         l.id === layerId ? { ...l, id: newLayerId, prompt, r2Key: "" } : l
       ),
+      generationPhase: "generating",
       generationTaskId: taskId,
     });
 
@@ -297,12 +336,17 @@ export class SceneAgent extends Agent<Env, SceneState> {
             ? { ...l, r2Key: gen.r2Key, duration: gen.duration }
             : l
         ),
+        generationPhase: null,
         generationTaskId: null,
       });
     } catch (e) {
       console.error("Failed to regenerate layer:", e);
       if (this.state.generationTaskId === taskId) {
-        this.setState({ ...this.state, generationTaskId: null });
+        this.setState({
+          ...this.state,
+          generationPhase: null,
+          generationTaskId: null,
+        });
       }
     }
   }
@@ -453,6 +497,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       scene,
       layers: forkedLayers,
       generating: false,
+      generationPhase: null,
       generationProgress: null,
       generationTaskId: null,
     });

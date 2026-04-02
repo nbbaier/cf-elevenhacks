@@ -18,6 +18,56 @@ const upsertSceneSchema = z.object({
   title: z.string().min(1).max(200),
 });
 
+async function upsertUserSceneIndex(
+  db: ReturnType<typeof drizzle>,
+  entry: {
+    createdAt: Date;
+    sceneId: string;
+    title: string;
+    userId: string;
+  }
+): Promise<void> {
+  try {
+    await db
+      .insert(userScenes)
+      .values(entry)
+      .onConflictDoUpdate({
+        target: [userScenes.sceneId, userScenes.userId],
+        set: { title: entry.title },
+      });
+    return;
+  } catch (error) {
+    console.warn(
+      "Composite user_scenes upsert failed, trying legacy fallback",
+      {
+        error: error instanceof Error ? error.message : String(error),
+        sceneId: entry.sceneId,
+        userId: entry.userId,
+      }
+    );
+  }
+
+  const existingScene = await db
+    .select({ sceneId: userScenes.sceneId })
+    .from(userScenes)
+    .where(eq(userScenes.sceneId, entry.sceneId))
+    .limit(1);
+
+  if (existingScene.length > 0) {
+    await db
+      .update(userScenes)
+      .set({
+        createdAt: entry.createdAt,
+        title: entry.title,
+        userId: entry.userId,
+      })
+      .where(eq(userScenes.sceneId, entry.sceneId));
+    return;
+  }
+
+  await db.insert(userScenes).values(entry);
+}
+
 export default {
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Worker router handles many routes
   async fetch(request: Request, env: Env) {
@@ -54,18 +104,12 @@ export default {
             // Fetch scene data from DO and upsert into user_scenes index
             const data = await stub.getSceneData();
             if (data.scene) {
-              await db
-                .insert(userScenes)
-                .values({
-                  sceneId,
-                  userId: session.user.id,
-                  title: data.scene.title,
-                  createdAt: new Date(data.scene.createdAt),
-                })
-                .onConflictDoUpdate({
-                  target: [userScenes.sceneId, userScenes.userId],
-                  set: { title: data.scene.title },
-                });
+              await upsertUserSceneIndex(db, {
+                sceneId,
+                userId: session.user.id,
+                title: data.scene.title,
+                createdAt: new Date(data.scene.createdAt),
+              });
             }
           }
           results.push({ sceneId, claimed });
@@ -92,18 +136,24 @@ export default {
       const { sceneId, title } = parsed.data;
 
       const db = drizzle(env.AUTH_DB);
-      await db
-        .insert(userScenes)
-        .values({
+      try {
+        await upsertUserSceneIndex(db, {
           sceneId,
           userId: session.user.id,
           title,
           createdAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [userScenes.sceneId, userScenes.userId],
-          set: { title },
         });
+      } catch (error) {
+        console.error("Failed to sync scene into user_scenes", {
+          error: error instanceof Error ? error.message : String(error),
+          sceneId,
+          userId: session.user.id,
+        });
+        return Response.json(
+          { error: "Failed to sync scene index" },
+          { status: 500 }
+        );
+      }
 
       return Response.json({ ok: true });
     }
