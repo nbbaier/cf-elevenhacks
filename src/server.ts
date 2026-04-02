@@ -1,15 +1,33 @@
 import { routeAgentRequest } from "agents";
 
-// Each tab in the UI has its own Durable Object agent class.
-// Exporting them here registers them with the Workers runtime.
-export { VoiceChatAgent } from "./agents/voice-chat";
-export { SoundscapeAgent } from "./agents/soundscape";
-export { CharacterAgent } from "./agents/character";
-export { MusicAgent } from "./agents/music";
+export { SceneAgent } from "./agents/scene";
+export { GalleryAgent } from "./agents/gallery";
 
 export default {
   async fetch(request: Request, env: Env) {
-    // routeAgentRequest matches /agents/* paths to the right DO
+    const url = new URL(request.url);
+
+    // Serve audio files from R2 at /audio/{r2Key}
+    if (url.pathname.startsWith("/audio/")) {
+      let key: string;
+      try {
+        key = decodeURIComponent(url.pathname.slice("/audio/".length));
+      } catch {
+        return new Response("Bad request", { status: 400 });
+      }
+      const object = await env.AUDIO_BUCKET.get(key);
+      if (!object) return new Response("Not found", { status: 404 });
+
+      return new Response(object.body, {
+        headers: {
+          "Content-Type": "audio/mpeg",
+          "Cache-Control": "public, max-age=31536000, immutable",
+          "Access-Control-Allow-Origin": "*"
+        }
+      });
+    }
+
+    // Route agent WebSocket/RPC requests
     return (
       (await routeAgentRequest(request, env)) ||
       new Response("Not found", { status: 404 })
