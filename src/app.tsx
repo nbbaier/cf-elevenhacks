@@ -232,11 +232,11 @@ export default function App() {
 								<span className="hidden sm:inline">My Scenes</span>
 							</button>
 						)}
-						<div className="flex items-center gap-1.5 text-muted-foreground">
+						{/* <div className="flex items-center gap-1.5 text-muted-foreground">
 							<ElevenLabsLogo className="w-4 h-4" />
 							<span className="text-xs">×</span>
 							<CloudflareLogo className="h-3" />
-						</div>
+						</div> */}
 						<UserMenu />
 						<ModeToggle />
 					</div>
@@ -259,9 +259,7 @@ export default function App() {
 						/>
 					)}
 					{route.view === "my-scenes" && (
-						<MyScenesView
-							onNavigateToScene={handleNavigateToScene}
-						/>
+						<MyScenesView onNavigateToScene={handleNavigateToScene} />
 					)}
 					{route.view === "scene" && route.sceneId && (
 						<SceneMixer
