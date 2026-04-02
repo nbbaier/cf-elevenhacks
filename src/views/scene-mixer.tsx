@@ -14,7 +14,8 @@ import {
   CheckCircleIcon,
   CircleIcon,
   LinkIcon,
-  SpeakerHighIcon
+  SpeakerHighIcon,
+  EyeSlashIcon
 } from "@phosphor-icons/react";
 import { LayerCard } from "../components/layer-card";
 import { PlaybackEngine } from "../lib/playback-engine";
@@ -183,6 +184,11 @@ export function SceneMixer({
       await navigator.clipboard.writeText(url);
     } catch {}
   }, [agent, sceneId]);
+
+  const handleUnpublish = useCallback(async () => {
+    await agent.call("unpublish", []);
+    setShareUrl(null);
+  }, [agent]);
 
   const handleFork = useCallback(async () => {
     const data = (await agent.call("getSceneData", [])) as {
@@ -367,7 +373,7 @@ export function SceneMixer({
                 {playing ? "Pause" : "Play"}
               </Button>
 
-              {isOwner && (
+              {isOwner && !scene.isPublic && (
                 <Button
                   variant="secondary"
                   icon={<ShareIcon size={16} />}
@@ -377,13 +383,23 @@ export function SceneMixer({
                 </Button>
               )}
 
-              {!isOwner && (
+              {isOwner && scene.isPublic && (
                 <Button
                   variant="secondary"
+                  icon={<EyeSlashIcon size={16} />}
+                  onClick={handleUnpublish}
+                >
+                  Unpublish
+                </Button>
+              )}
+
+              {!isOwner && (
+                <Button
+                  variant="primary"
                   icon={<GitForkIcon size={16} />}
                   onClick={handleFork}
                 >
-                  Fork
+                  Make It Yours
                 </Button>
               )}
             </div>
@@ -398,6 +414,26 @@ export function SceneMixer({
                 <Text size="xs" variant="secondary">
                   Copied!
                 </Text>
+              </div>
+            )}
+
+            {isOwner && scene.isPublic && !shareUrl && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-kumo-elevated">
+                <LinkIcon size={14} className="text-kumo-accent shrink-0" />
+                <code className="text-xs text-kumo-default flex-1 truncate">
+                  {window.location.origin}/scene/{sceneId}
+                </code>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    const url = `${window.location.origin}/scene/${sceneId}`;
+                    navigator.clipboard.writeText(url).catch(() => {});
+                    setShareUrl(url);
+                  }}
+                >
+                  Copy
+                </Button>
               </div>
             )}
           </div>
@@ -450,7 +486,7 @@ export function SceneMixer({
       {layers.length > 0 && (
         <div className="space-y-3">
           <Text size="sm" bold>
-            Layers ({layers.length})
+            {isOwner ? `Layers (${layers.length})` : `${layers.length} Layers`}
           </Text>
           {layers.map((layer) => (
             <LayerCard

@@ -315,7 +315,32 @@ export class SceneAgent extends Agent<Env, SceneState> {
       ...this.state,
       scene: { ...this.state.scene, isPublic: true }
     });
+
+    // Register with Gallery DO
+    const galleryId = this.env.GalleryAgent.idFromName("gallery");
+    const gallery = this.env.GalleryAgent.get(galleryId);
+    await gallery.register({
+      id: this.state.scene.id,
+      title: this.state.scene.title,
+      authorName: this.state.scene.authorName,
+      createdAt: this.state.scene.createdAt
+    });
+
     return this.state.scene.id;
+  }
+
+  /** Unpublish the scene and remove from Gallery. */
+  @callable()
+  async unpublish(): Promise<void> {
+    if (!this.state.scene) throw new Error("No scene to unpublish");
+    this.setState({
+      ...this.state,
+      scene: { ...this.state.scene, isPublic: false }
+    });
+
+    const galleryId = this.env.GalleryAgent.idFromName("gallery");
+    const gallery = this.env.GalleryAgent.get(galleryId);
+    await gallery.unregister(this.state.scene.id);
   }
 
   /** Get full scene data (used by fork flow). */

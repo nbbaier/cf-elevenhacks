@@ -126,8 +126,8 @@ export function LayerCard({
           </div>
         )}
 
-        {/* Controls */}
-        {!isLoading && (
+        {/* Controls — full mixer for owner, compact info for listeners */}
+        {!isLoading && isOwner && (
           <div className="space-y-2">
             {/* Volume slider */}
             <div className="flex items-center gap-3">
@@ -145,7 +145,6 @@ export function LayerCard({
                   onVolumeChange(layer.id, parseFloat(e.target.value))
                 }
                 className="flex-1 h-1.5 accent-[var(--kumo-accent)]"
-                disabled={!isOwner}
               />
               <span className="text-xs text-kumo-subtle w-8 text-right">
                 {Math.round(layer.volume * 100)}%
@@ -168,7 +167,6 @@ export function LayerCard({
                   onPanChange(layer.id, parseFloat(e.target.value))
                 }
                 className="flex-1 h-1.5 accent-[var(--kumo-accent)]"
-                disabled={!isOwner}
               />
               <span className="text-xs text-kumo-subtle w-8 text-right">
                 {layer.pan === 0

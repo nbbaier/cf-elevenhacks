@@ -1,4 +1,4 @@
-import { Suspense, useState, useCallback } from "react";
+import { Suspense, useState, useCallback, useEffect } from "react";
 import { Button } from "@cloudflare/kumo";
 import { Toasty } from "@cloudflare/kumo/components/toast";
 import { CloudflareLogo } from "@cloudflare/kumo";
