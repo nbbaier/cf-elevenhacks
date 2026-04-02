@@ -96,12 +96,17 @@ export default function App() {
   }, []);
 
   // Handle browser back/forward
-  if (typeof window !== "undefined") {
-    window.onpopstate = () => {
-      setRoute(useRoute());
+  useEffect(() => {
+    const handlePopState = () => {
+      const pathname = window.location.pathname;
+      const match = pathname.match(/^\/scene\/([a-zA-Z0-9-]+)/);
+      setRoute(match ? { view: "scene", sceneId: match[1] } : { view: "create" });
       setNewScenePrompt(null);
     };
-  }
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
 
   return (
     <Toasty>
