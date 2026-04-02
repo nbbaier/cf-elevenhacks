@@ -354,7 +354,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
           await this.env.AUDIO_BUCKET.put(newKey, srcObj.body);
           return { ...l, r2Key: newKey };
         }
-        return { ...l };
+        return { ...l, r2Key: "" };
       })
     );
 
