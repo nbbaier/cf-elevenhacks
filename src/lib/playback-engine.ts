@@ -296,8 +296,8 @@ export class PlaybackEngine {
     return this.layers.has(id) && this.layers.get(id)?.buffer !== null;
   }
 
-  /** Start playback of all enabled layers. */
-  async play(): Promise<boolean> {
+  /** Ensure the audio context is created and running from a user gesture. */
+  async unlock(): Promise<boolean> {
     const ctx = this.getContext();
     if (ctx.state !== "running") {
       try {
@@ -307,7 +307,13 @@ export class PlaybackEngine {
       }
     }
 
-    if (ctx.state !== "running") {
+    return ctx.state === "running";
+  }
+
+  /** Start playback of all enabled layers. */
+  async play(): Promise<boolean> {
+    const unlocked = await this.unlock();
+    if (!unlocked) {
       return false;
     }
 

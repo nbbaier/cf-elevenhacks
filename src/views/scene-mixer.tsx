@@ -84,6 +84,50 @@ export function SceneMixer({
   const sceneOwnerId = scene?.ownerId ?? null;
   const sceneTitle = scene?.title ?? null;
 
+  const syncLayersToEngine = useCallback(
+    async (
+      engine: PlaybackEngine,
+      nextLayers: Layer[]
+    ): Promise<{ playable: boolean }> => {
+      const pendingLoads: Promise<void>[] = [];
+
+      for (const layer of nextLayers) {
+        if (layer.r2Key && !engine.hasLayer(layer.id)) {
+          const audioUrl = `/audio/${encodeURIComponent(layer.r2Key)}`;
+          pendingLoads.push(
+            engine.loadLayer(
+              layer.id,
+              audioUrl,
+              layer.volume,
+              layer.pan,
+              layer.enabled
+            )
+          );
+        }
+      }
+
+      if (pendingLoads.length > 0) {
+        await Promise.allSettled(pendingLoads);
+      }
+
+      for (const layer of nextLayers) {
+        if (!engine.hasLayer(layer.id)) {
+          continue;
+        }
+        engine.updateLayerVolume(layer.id, layer.volume);
+        engine.updateLayerPan(layer.id, layer.pan);
+        engine.updateLayerEnabled(layer.id, layer.enabled);
+      }
+
+      return {
+        playable: nextLayers.some(
+          (layer) => Boolean(layer.r2Key) && engine.hasLayer(layer.id)
+        ),
+      };
+    },
+    []
+  );
+
   // Trigger generation for new scenes
   useEffect(() => {
     if (isNew && connected && initialPrompt && !generationTriggered) {
@@ -147,9 +191,8 @@ export function SceneMixer({
     });
   }, [hasScene, sceneOwnerId, sceneTitle, sceneId, session?.user?.id, isOwner]);
 
-  // Initialize playback engine
+  // Cleanup playback engine on unmount
   useEffect(() => {
-    engineRef.current = new PlaybackEngine();
     return () => {
       engineRef.current?.destroy();
       engineRef.current = null;
@@ -162,20 +205,10 @@ export function SceneMixer({
     if (!engine) {
       return;
     }
-
-    for (const layer of layers) {
-      if (layer.r2Key && !engine.hasLayer(layer.id)) {
-        const audioUrl = `/audio/${encodeURIComponent(layer.r2Key)}`;
-        engine.loadLayer(
-          layer.id,
-          audioUrl,
-          layer.volume,
-          layer.pan,
-          layer.enabled
-        );
-      }
-    }
-  }, [layers]);
+    syncLayersToEngine(engine, layers).catch(() => {
+      // Non-fatal: failed layer loads can be retried on the next play attempt.
+    });
+  }, [layers, syncLayersToEngine]);
 
   // Throttled agent sync for sliders (immediate local audio, batched network)
   const syncVolume = useMemo(
@@ -260,27 +293,43 @@ export function SceneMixer({
   }, [agent, addLayerPrompt, addLayerName, addLayerType]);
 
   const handlePlayPause = useCallback(async () => {
-    const engine = engineRef.current;
-    if (!engine) {
-      return;
-    }
+    let engine = engineRef.current;
 
     if (playing) {
-      engine.pause();
+      engine?.pause();
       setPlaying(false);
     } else {
-      setPlayPending(true);
-      const started = await engine.play();
-      setPlayPending(false);
-
-      if (!started) {
-        toast.error("Playback couldn't start on this device");
-        return;
+      if (!engine) {
+        engine = new PlaybackEngine();
+        engineRef.current = engine;
       }
 
-      setPlaying(true);
+      setPlayPending(true);
+      try {
+        const unlocked = await engine.unlock();
+        if (!unlocked) {
+          toast.error("Playback couldn't start on this device");
+          return;
+        }
+
+        const { playable } = await syncLayersToEngine(engine, layers);
+        if (!playable) {
+          toast.error("Audio is still loading");
+          return;
+        }
+
+        const started = await engine.play();
+        if (!started) {
+          toast.error("Playback couldn't start on this device");
+          return;
+        }
+
+        setPlaying(true);
+      } finally {
+        setPlayPending(false);
+      }
     }
-  }, [playing]);
+  }, [layers, playing, syncLayersToEngine]);
 
   const handleShare = useCallback(async () => {
     try {
