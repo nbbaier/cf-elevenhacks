@@ -343,10 +343,24 @@ export class SceneAgent extends Agent<Env, SceneState> {
       isPublic: false
     };
 
+    // Copy R2 objects so each scene owns its own audio files
+    const forkedLayers = await Promise.all(
+      sourceLayers.map(async (l) => {
+        if (!l.r2Key) return { ...l };
+        const prefix = l.type === "music" ? "music" : "sfx";
+        const newKey = `${prefix}/${crypto.randomUUID()}.mp3`;
+        const srcObj = await this.env.AUDIO_BUCKET.get(l.r2Key);
+        if (srcObj) {
+          await this.env.AUDIO_BUCKET.put(newKey, srcObj.body);
+          return { ...l, r2Key: newKey };
+        }
+        return { ...l };
+      })
+    );
+
     this.setState({
       scene,
-      // Layers reference the same R2 audio — no duplication
-      layers: sourceLayers.map((l) => ({ ...l })),
+      layers: forkedLayers,
       generating: false,
       generationProgress: null
     });

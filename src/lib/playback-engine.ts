@@ -34,7 +34,8 @@ export class PlaybackEngine {
     id: string,
     audioUrl: string,
     volume = 0.7,
-    pan = 0
+    pan = 0,
+    enabled = true
   ): Promise<void> {
     const ctx = this.getContext();
 
@@ -50,7 +51,7 @@ export class PlaybackEngine {
     const gainNode = ctx.createGain();
     const panNode = ctx.createStereoPanner();
 
-    gainNode.gain.value = volume;
+    gainNode.gain.value = enabled ? volume : 0;
     panNode.pan.value = pan;
 
     panNode.connect(gainNode);
@@ -62,7 +63,7 @@ export class PlaybackEngine {
       panNode,
       buffer,
       volume,
-      enabled: true,
+      enabled,
       activeSource: null,
       activeFadeGain: null,
       crossfadeTimer: null

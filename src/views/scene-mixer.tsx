@@ -105,7 +105,7 @@ export function SceneMixer({
     for (const layer of layers) {
       if (layer.r2Key && !engine.hasLayer(layer.id)) {
         const audioUrl = `/audio/${encodeURIComponent(layer.r2Key)}`;
-        engine.loadLayer(layer.id, audioUrl, layer.volume, layer.pan);
+        engine.loadLayer(layer.id, audioUrl, layer.volume, layer.pan, layer.enabled);
       }
     }
   }, [layers]);
