@@ -2,9 +2,10 @@ import { Suspense, useState, useCallback, useEffect } from "react";
 import { Button } from "@cloudflare/kumo";
 import { Toasty } from "@cloudflare/kumo/components/toast";
 import { CloudflareLogo } from "@cloudflare/kumo";
-import { SunIcon, MoonIcon, WaveformIcon } from "@phosphor-icons/react";
+import { SunIcon, MoonIcon, WaveformIcon, SignOutIcon } from "@phosphor-icons/react";
 import { CreateView } from "./views/create";
 import { SceneMixer } from "./views/scene-mixer";
+import { useSession, signIn, signOut } from "./lib/auth-client";
 
 function ElevenLabsLogo({ className }: { className?: string }) {
   return (
@@ -57,6 +58,52 @@ function ModeToggle() {
       onClick={toggle}
       aria-label="Toggle theme"
     />
+  );
+}
+
+function UserMenu() {
+  const { data: session, isPending } = useSession();
+
+  if (isPending) return null;
+
+  if (!session) {
+    return (
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => signIn.social({ provider: "google" })}
+      >
+        Sign in with Google
+      </Button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      {session.user.image ? (
+        <img
+          src={session.user.image}
+          alt={session.user.name}
+          className="w-6 h-6 rounded-full"
+          referrerPolicy="no-referrer"
+        />
+      ) : (
+        <div className="w-6 h-6 rounded-full bg-kumo-accent flex items-center justify-center text-xs font-medium text-white">
+          {session.user.name?.charAt(0)?.toUpperCase()}
+        </div>
+      )}
+      <span className="text-sm text-kumo-default hidden sm:inline">
+        {session.user.name}
+      </span>
+      <Button
+        variant="secondary"
+        shape="square"
+        size="sm"
+        icon={<SignOutIcon size={14} />}
+        onClick={() => signOut()}
+        aria-label="Sign out"
+      />
+    </div>
   );
 }
 
@@ -139,6 +186,7 @@ export default function App() {
                 <span className="text-xs">×</span>
                 <CloudflareLogo variant="glyph" color="color" className="h-3" />
               </div>
+              <UserMenu />
               <ModeToggle />
             </div>
           </div>

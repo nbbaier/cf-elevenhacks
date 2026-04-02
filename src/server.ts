@@ -1,4 +1,5 @@
 import { routeAgentRequest } from "agents";
+import { createAuth } from "./lib/auth";
 
 export { SceneAgent } from "./agents/scene";
 export { GalleryAgent } from "./agents/gallery";
@@ -6,6 +7,12 @@ export { GalleryAgent } from "./agents/gallery";
 export default {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
+
+    // Handle auth routes
+    if (url.pathname.startsWith("/api/auth")) {
+      const auth = createAuth(env, request);
+      return auth.handler(request);
+    }
 
     // Serve audio files from R2 at /audio/{r2Key}
     if (url.pathname.startsWith("/audio/")) {
