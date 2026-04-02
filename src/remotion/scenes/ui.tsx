@@ -1,0 +1,306 @@
+import type { CSSProperties, ReactNode } from "react";
+import { C, FONT, RADIUS } from "../theme";
+
+// ── Shared UI mock components ─────────────────────────────────────────────────
+
+export function AppWindow({ children }: { children: ReactNode }) {
+  return (
+    <div
+      style={{
+        width: 860,
+        background: C.bg,
+        borderRadius: RADIUS * 1.6,
+        overflow: "hidden",
+        boxShadow:
+          "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
+        fontFamily: FONT,
+      }}
+    >
+      {/* Browser chrome */}
+      <div
+        style={{
+          background: C.card,
+          borderBottom: `1px solid ${C.cardBorder}`,
+          padding: "12px 20px",
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
+        <div style={{ display: "flex", gap: 7 }}>
+          {["#ef4444", "#f59e0b", "#22c55e"].map((c) => (
+            <div
+              key={c}
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: 999,
+                background: c,
+              }}
+            />
+          ))}
+        </div>
+        <div
+          style={{
+            flex: 1,
+            background: C.muted,
+            borderRadius: 8,
+            padding: "4px 12px",
+            fontSize: 12,
+            color: C.mutedFg,
+            fontFamily: FONT,
+          }}
+        >
+          soundscaper.app
+        </div>
+      </div>
+
+      {/* App header */}
+      <div
+        style={{
+          background: C.card,
+          borderBottom: `1px solid ${C.cardBorder}`,
+          padding: "12px 24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <WaveformSvg color={C.primary} size={20} />
+          <span
+            style={{
+              fontWeight: 700,
+              fontSize: 15,
+              color: C.fg,
+              letterSpacing: "-0.3px",
+              fontFamily: FONT,
+            }}
+          >
+            Soundscaper
+          </span>
+        </div>
+        <div
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 999,
+            background: C.primary,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 11,
+            fontWeight: 700,
+            color: C.primaryFg,
+            fontFamily: FONT,
+          }}
+        >
+          N
+        </div>
+      </div>
+
+      {children}
+    </div>
+  );
+}
+
+export function MockCard({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+}) {
+  return (
+    <div
+      style={{
+        background: C.card,
+        border: `1px solid ${C.cardBorder}`,
+        borderRadius: RADIUS,
+        padding: "20px",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function MockButton({
+  children,
+  variant = "primary",
+  style,
+}: {
+  children: ReactNode;
+  variant?: "primary" | "secondary" | "outline";
+  style?: CSSProperties;
+}) {
+  const bg =
+    variant === "primary"
+      ? C.primary
+      : variant === "secondary"
+        ? C.muted
+        : "transparent";
+  const color =
+    variant === "primary"
+      ? C.primaryFg
+      : variant === "outline"
+        ? C.mutedFg
+        : C.fg;
+  const border = variant === "outline" ? `1px solid ${C.cardBorder}` : "none";
+
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        background: bg,
+        color,
+        border,
+        borderRadius: RADIUS,
+        padding: "8px 16px",
+        fontSize: 13,
+        fontWeight: 600,
+        fontFamily: FONT,
+        cursor: "pointer",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function WaveformSvg({
+  size = 24,
+  color = C.primary,
+  animated = false,
+  frame = 0,
+}: {
+  size?: number;
+  color?: string;
+  animated?: boolean;
+  frame?: number;
+}) {
+  const bars = [0.4, 0.7, 1.0, 0.8, 0.5, 0.9, 0.6, 0.85, 0.45, 0.75];
+  return (
+    <svg height={size} viewBox="0 0 24 24" width={size}>
+      {bars.map((h, i) => {
+        const animH = animated
+          ? h * (0.5 + 0.5 * Math.sin(frame * 0.15 + i * 0.9))
+          : h;
+        const bh = animH * (size * 0.75);
+        const bw = (size / bars.length) * 0.6;
+        const x = (i / bars.length) * size + bw * 0.5;
+        return (
+          <rect
+            fill={color}
+            height={bh}
+            key={i}
+            rx={bw / 2}
+            width={bw}
+            x={x}
+            y={(size - bh) / 2}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
+export function LayerBar({
+  label,
+  color,
+  volume,
+  enabled,
+  generating,
+  frame = 0,
+}: {
+  label: string;
+  color: string;
+  volume: number;
+  enabled: boolean;
+  generating?: boolean;
+  frame?: number;
+}) {
+  const pulse = generating
+    ? 0.4 + 0.3 * Math.sin(frame * 0.15)
+    : enabled
+      ? 1
+      : 0.35;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "10px 14px",
+        background: C.card,
+        border: `1px solid ${C.cardBorder}`,
+        borderLeft: `3px solid ${enabled ? color : C.muted}`,
+        borderRadius: RADIUS,
+        opacity: pulse,
+        fontFamily: FONT,
+      }}
+    >
+      {/* Toggle dot */}
+      <div
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: 999,
+          background: generating ? C.mutedFg : enabled ? color : C.muted,
+          flexShrink: 0,
+        }}
+      />
+      {/* Label */}
+      <span
+        style={{
+          flex: 1,
+          fontSize: 13,
+          fontWeight: 500,
+          color: enabled ? C.fg : C.mutedFg,
+          fontFamily: FONT,
+        }}
+      >
+        {label}
+      </span>
+      {/* Volume bar */}
+      {!generating && (
+        <div
+          style={{
+            width: 80,
+            height: 3,
+            background: C.muted,
+            borderRadius: 999,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${volume * 100}%`,
+              background: color,
+              borderRadius: 999,
+            }}
+          />
+        </div>
+      )}
+      {generating && (
+        <span style={{ fontSize: 11, color: C.mutedFg, fontFamily: FONT }}>
+          generating...
+        </span>
+      )}
+    </div>
+  );
+}
+
+export const LAYER_DATA = [
+  { label: "Rainfall on pavement", color: "#60a5fa", volume: 0.72 },
+  { label: "Distant traffic hum", color: "#34d399", volume: 0.45 },
+  { label: "Jazz through a window", color: C.primary, volume: 0.58 },
+  { label: "Café murmur", color: "#f59e0b", volume: 0.33 },
+  { label: "Night wind", color: "#e879f9", volume: 0.25 },
+] as const;

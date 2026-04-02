@@ -21,15 +21,11 @@ The biggest opportunities are around:
    - Current behavior appears to model ownership transfer (`claimScene`) which may be intentional, but this schema prevents keeping historical ownership or collaborative access later.
    - If scene indexing should be strictly per-user, consider composite PK/unique key (`sceneId`, `userId`) and query changes.
 
-2. **Unbounded per-layer update RPC frequency can degrade responsiveness.**
-   - Volume/pan sliders call `agent.call("updateLayer", ...)` on every input event.
-   - For rapid dragging this can produce many DO writes and websocket messages.
-   - Add debounce/throttle (e.g., 50–100ms) or local optimistic updates with periodic flush.
+2. **~~Unbounded per-layer update RPC frequency can degrade responsiveness.~~** ✅ Fixed
+   - Volume/pan sliders now update local WebAudio instantly but throttle `agent.call("updateLayer")` to 100ms via `src/lib/throttle.ts`, preventing DO write floods during slider dragging.
 
-3. **`SceneMixer` has several fire-and-forget async calls without robust failure UX.**
-   - Critical user actions (`publish`, `unpublish`, `claimScene`, layer ops) generally swallow errors.
-   - This can lead to mismatches between perceived and actual server state.
-   - Introduce action-scoped pending/error state and explicit retry affordances.
+3. **~~`SceneMixer` has several fire-and-forget async calls without robust failure UX.~~** ✅ Fixed
+   - `publish`, `unpublish`, `addLayer`, `regenerateLayer`, `removeLayer`, and `handleFork` are now wrapped with try/catch and surface errors via sonner toast notifications. Success toasts added for publish/unpublish.
 
 ### P1 / Medium Impact
 
@@ -61,16 +57,14 @@ The biggest opportunities are around:
 
 10. **Minor cleanup opportunities.**
    - Duplicate comment in `regenerateLayer` method.
-   - Temporary `forkAgent` Promise wrapper in `handleFork` is unnecessary complexity.
+   - ~~Temporary `forkAgent` Promise wrapper in `handleFork` is unnecessary complexity.~~ ✅ Removed
 
 ## Detailed Notes by Area
 
 ### Frontend performance
 
-- **High-frequency RPC from sliders:**
-  - `LayerCard` slider `onChange` directly triggers `onVolumeChange` / `onPanChange`.
-  - `SceneMixer` forwards each call to durable object.
-  - Recommendation: keep instantaneous WebAudio response local, batch network sync.
+- **~~High-frequency RPC from sliders:~~** ✅ Fixed
+  - Slider handlers now use a throttle utility (100ms) for agent sync while keeping instant local WebAudio response.
 
 - **Potential avoidable re-renders:**
   - `SceneMixer` is large and manages many concerns in one component.
@@ -82,9 +76,8 @@ The biggest opportunities are around:
 
 ### UX
 
-- **Loading and error affordances are uneven.**
-  - Good loading spinner in `MyScenesView`, but many async actions have no feedback.
-  - Recommendation: toast/snackbar + inline status for publish/regenerate/add/remove operations.
+- **~~Loading and error affordances are uneven.~~** ✅ Fixed
+  - Sonner toast notifications added for publish, unpublish, add layer, regenerate, remove, and fork operations with error/success feedback.
 
 - **Share UX is solid but could provide persistent confirmation.**
   - `Copied!` appears via `shareUrl` presence; could stale.
@@ -111,8 +104,8 @@ The biggest opportunities are around:
 
 ## Suggested Next Iteration Plan
 
-1. Add a lightweight action state system in `SceneMixer` for pending/error notifications.
-2. Debounce slider-to-DO writes while keeping immediate local audio updates.
+1. ~~Add a lightweight action state system in `SceneMixer` for pending/error notifications.~~ ✅ Done — sonner toasts
+2. ~~Debounce slider-to-DO writes while keeping immediate local audio updates.~~ ✅ Done — 100ms throttle
 3. Harden API payload validation (`/api/my-scenes`, `/api/claim-scenes`).
 4. Revisit `user_scenes` key strategy based on intended ownership model.
 5. Refactor `SceneMixer` into focused subcomponents and add tests around critical flows.
