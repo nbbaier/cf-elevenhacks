@@ -1,5 +1,5 @@
 import { Composition } from "remotion";
-import { SoundscaperDemo } from "./SoundscaperDemo";
+import { SoundscaperDemo } from "./soundscaper-demo";
 
 export const RemotionRoot = () => {
   return (

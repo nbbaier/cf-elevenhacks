@@ -6,12 +6,12 @@ import {
   staticFile,
   useCurrentFrame,
 } from "remotion";
-import { CreateScene } from "./scenes/CreateScene";
-import { GeneratingScene } from "./scenes/GeneratingScene";
-import { HookScene } from "./scenes/HookScene";
-import { MixerScene } from "./scenes/MixerScene";
-import { OutroScene } from "./scenes/OutroScene";
-import { ShareScene } from "./scenes/ShareScene";
+import { CreateScene } from "./scenes/create-scene";
+import { GeneratingScene } from "./scenes/generating-scene";
+import { HookScene } from "./scenes/hook-scene";
+import { MixerScene } from "./scenes/mixer-scene";
+import { OutroScene } from "./scenes/outro-scene";
+import { ShareScene } from "./scenes/share-scene";
 import { C } from "./theme";
 
 // Scene timings (frames @ 30fps)

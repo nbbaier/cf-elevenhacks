@@ -5,6 +5,7 @@ import { WaveformSvg } from "./ui";
 function ElevenLabsLogo({ size = 24 }: { size?: number }) {
   return (
     <svg fill="none" height={size} viewBox="0 0 32 32" width={size}>
+      <title>ElevenLabs logo</title>
       <rect
         fill="currentColor"
         height="24"
@@ -28,6 +29,7 @@ function ElevenLabsLogo({ size = 24 }: { size?: number }) {
 function CloudflareIcon({ size = 32 }: { size?: number }) {
   return (
     <svg fill="none" height={size} viewBox="0 0 32 32" width={size}>
+      <title>Cloudflare logo</title>
       <path
         d="M21.5 22.5l.6-2.1a3.5 3.5 0 00-.13-2.65 3.3 3.3 0 00-1.92-1.7L8.5 14.5a.45.45 0 01-.3-.18.54.54 0 01-.08-.33.56.56 0 01.47-.46l11.7-1.6a6.65 6.65 0 003.95-3.5l.83-2.02a.66.66 0 00.04-.32C24.0 3.17 20.2 1.5 16.5 1.5a12.7 12.7 0 00-12.2 9.35A5.73 5.73 0 003.5 14a4.7 4.7 0 00.82 4.7 4.7 4.7 0 00-.56 4.01A4.84 4.84 0 008.5 26.5h12.8a.6.6 0 00.58-.46l-.38.46z"
         fill="#F6821F"

@@ -150,9 +150,6 @@ export function MixerScene() {
     extrapolateRight: "clamp",
   });
 
-  // Waveform amplitude: active when playing
-  const waveAmp = isPlaying ? 1 : 0.15;
-
   const labelOpacity = spring({
     frame: frame - 5,
     fps,

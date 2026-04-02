@@ -207,7 +207,7 @@ export function CreateScene() {
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   {["−", "5", "+"].map((t, i) => (
                     <div
-                      key={i}
+                      key={t}
                       style={{
                         width: i === 1 ? 26 : 32,
                         height: 32,

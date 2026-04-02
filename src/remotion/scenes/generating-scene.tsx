@@ -111,6 +111,7 @@ export function GeneratingScene() {
                 viewBox="0 0 18 18"
                 width={24}
               >
+                <title>Loading spinner</title>
                 <circle
                   cx={9}
                   cy={9}
