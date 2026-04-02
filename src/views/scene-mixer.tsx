@@ -88,6 +88,18 @@ export function SceneMixer({
 		}
 	}, [scene?.title, sceneId, isOwner]);
 
+	// Sync scene to D1 user_scenes index when signed in
+	useEffect(() => {
+		if (scene && session?.user?.id && (isOwner || scene.ownerId === session.user.id)) {
+			fetch("/api/my-scenes", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				credentials: "include",
+				body: JSON.stringify({ sceneId, title: scene.title }),
+			}).catch(() => {});
+		}
+	}, [scene?.title, sceneId, session?.user?.id, isOwner, scene?.ownerId]);
+
 	// Initialize playback engine
 	useEffect(() => {
 		engineRef.current = new PlaybackEngine();

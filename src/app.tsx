@@ -1,4 +1,5 @@
 import {
+	ListIcon,
 	MoonIcon,
 	SignOutIcon,
 	SunIcon,
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { signIn, signOut, useSession } from "./lib/auth-client";
 import { useAutoClaimScenes } from "./lib/use-auto-claim";
 import { CreateView } from "./views/create";
+import { MyScenesView } from "./views/my-scenes";
 import { SceneMixer } from "./views/scene-mixer";
 
 function ElevenLabsLogo({ className }: { className?: string }) {
@@ -135,10 +137,13 @@ function UserMenu() {
 
 // Simple pathname-based router
 function useRoute(): {
-	view: "create" | "scene";
+	view: "create" | "scene" | "my-scenes";
 	sceneId?: string;
 } {
 	const pathname = window.location.pathname;
+	if (pathname === "/my-scenes") {
+		return { view: "my-scenes" };
+	}
 	const match = pathname.match(/^\/scene\/([a-zA-Z0-9-]+)/);
 	if (match) {
 		return { view: "scene", sceneId: match[1] };
@@ -150,6 +155,7 @@ export default function App() {
 	const [route, setRoute] = useState(useRoute);
 	const [newScenePrompt, setNewScenePrompt] = useState<string | null>(null);
 	const [newSceneLayerCount, setNewSceneLayerCount] = useState<number>(5);
+	const { data: session } = useSession();
 
 	useAutoClaimScenes();
 
@@ -170,6 +176,12 @@ export default function App() {
 		setNewScenePrompt(null);
 	}, []);
 
+	const handleNavigateMyScenes = useCallback(() => {
+		window.history.pushState({}, "", "/my-scenes");
+		setRoute({ view: "my-scenes" });
+		setNewScenePrompt(null);
+	}, []);
+
 	const handleNavigateToScene = useCallback((sceneId: string) => {
 		window.history.pushState({}, "", `/scene/${sceneId}`);
 		setNewScenePrompt(null);
@@ -180,10 +192,14 @@ export default function App() {
 	useEffect(() => {
 		const handlePopState = () => {
 			const pathname = window.location.pathname;
-			const match = pathname.match(/^\/scene\/([a-zA-Z0-9-]+)/);
-			setRoute(
-				match ? { view: "scene", sceneId: match[1] } : { view: "create" },
-			);
+			if (pathname === "/my-scenes") {
+				setRoute({ view: "my-scenes" });
+			} else {
+				const match = pathname.match(/^\/scene\/([a-zA-Z0-9-]+)/);
+				setRoute(
+					match ? { view: "scene", sceneId: match[1] } : { view: "create" },
+				);
+			}
 			setNewScenePrompt(null);
 		};
 		window.addEventListener("popstate", handlePopState);
@@ -206,6 +222,16 @@ export default function App() {
 						</span>
 					</button>
 					<div className="flex items-center gap-3">
+						{session && (
+							<button
+								type="button"
+								onClick={handleNavigateMyScenes}
+								className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+							>
+								<ListIcon size={16} />
+								<span className="hidden sm:inline">My Scenes</span>
+							</button>
+						)}
 						<div className="flex items-center gap-1.5 text-muted-foreground">
 							<ElevenLabsLogo className="w-4 h-4" />
 							<span className="text-xs">×</span>
@@ -229,6 +255,11 @@ export default function App() {
 					{route.view === "create" && (
 						<CreateView
 							onGenerate={handleGenerate}
+							onNavigateToScene={handleNavigateToScene}
+						/>
+					)}
+					{route.view === "my-scenes" && (
+						<MyScenesView
 							onNavigateToScene={handleNavigateToScene}
 						/>
 					)}
