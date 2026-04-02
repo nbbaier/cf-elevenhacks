@@ -190,19 +190,19 @@ export default function App() {
 	return (
 		<div className="flex flex-col h-screen bg-background">
 			{/* Header */}
-			<header className="px-5 py-3 bg-card border-b border-border">
+			<header className="px-5 py-3.5 bg-card border-b border-border">
 				<div className="max-w-2xl mx-auto flex items-center justify-between">
 					<button
 						type="button"
 						onClick={handleNavigateHome}
-						className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+						className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
 					>
 						<WaveformIcon
-							size={20}
+							size={22}
 							weight="bold"
 							className="text-primary"
 						/>
-						<span className="text-base font-semibold text-foreground">
+						<span className="text-base font-bold tracking-tight text-foreground">
 							Soundscaper
 						</span>
 					</button>

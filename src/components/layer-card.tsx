@@ -24,6 +24,13 @@ export function getLayerColor(index: number, dark = false): string {
 		: `oklch(0.55 0.2 ${hue})`;
 }
 
+export function getLayerBg(index: number, dark = false): string {
+	const hue = LAYER_HUES[index % LAYER_HUES.length];
+	return dark
+		? `oklch(0.25 0.025 ${hue})`
+		: `oklch(0.97 0.012 ${hue})`;
+}
+
 interface LayerCardProps {
 	layer: Layer;
 	colorIndex: number;
@@ -33,6 +40,8 @@ interface LayerCardProps {
 	onToggle: (id: string, enabled: boolean) => void;
 	onRegenerate: (id: string, newPrompt?: string) => void;
 	onRemove: (id: string) => void;
+	style?: React.CSSProperties;
+	className?: string;
 }
 
 export function LayerCard({
@@ -44,12 +53,15 @@ export function LayerCard({
 	onToggle,
 	onRegenerate,
 	onRemove,
+	style,
+	className,
 }: LayerCardProps) {
 	const [editing, setEditing] = useState(false);
 	const [editPrompt, setEditPrompt] = useState(layer.prompt);
 	const isLoading = !layer.r2Key;
 	const isDark = document.documentElement.classList.contains("dark");
 	const layerColor = getLayerColor(colorIndex, isDark);
+	const layerBg = getLayerBg(colorIndex, isDark);
 
 	const handleSavePrompt = useCallback(() => {
 		if (editPrompt.trim() && editPrompt !== layer.prompt) {
@@ -60,10 +72,14 @@ export function LayerCard({
 
 	return (
 		<Card
-			className={`p-4 transition-opacity border-l-[3px] ${
+			className={`p-4 transition-opacity border-l-4 ${
 				!layer.enabled ? "opacity-50" : ""
-			}`}
-			style={{ borderLeftColor: layerColor }}
+			} ${className ?? ""}`}
+			style={{
+				borderLeftColor: layerColor,
+				backgroundColor: layerBg,
+				...style,
+			}}
 		>
 			<div className="space-y-3">
 				{/* Header row */}

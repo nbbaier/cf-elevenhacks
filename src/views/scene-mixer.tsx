@@ -248,9 +248,9 @@ export function SceneMixer({
 	const readyLayers = layers.filter((l) => l.r2Key);
 
 	return (
-		<div className="max-w-2xl mx-auto w-full px-5 py-6 space-y-5">
+		<div className="max-w-2xl mx-auto w-full px-5 py-8 flex flex-col gap-6">
 			{/* Connection status */}
-			<div className="flex items-center justify-between">
+			<div className="flex items-center justify-between animate-fade-up">
 				<button
 					type="button"
 					onClick={onNavigateHome}
@@ -272,11 +272,11 @@ export function SceneMixer({
 
 			{/* Scene header */}
 			{scene && (
-				<Card className="p-5">
-					<div className="space-y-3">
+				<Card className="p-6 animate-fade-up" style={{ animationDelay: "0.06s" }}>
+					<div className="space-y-4">
 						{/* Title */}
-						<div className="flex items-center gap-2">
-							<WaveformIcon size={20} className="text-primary shrink-0" />
+						<div className="flex items-center gap-3">
+							<WaveformIcon size={24} weight="bold" className="text-primary shrink-0" />
 							{editingTitle && isOwner ? (
 								<div className="flex gap-2 flex-1">
 									<input
@@ -285,13 +285,13 @@ export function SceneMixer({
 										onChange={(e) => setTitleDraft(e.target.value)}
 										onKeyDown={(e) => e.key === "Enter" && handleSaveTitle()}
 										onBlur={handleSaveTitle}
-										className="flex-1 px-3 py-1 rounded-lg bg-muted text-lg font-semibold text-foreground border border-border focus:outline-none focus:ring-2 focus:ring-ring"
+										className="flex-1 px-3 py-1.5 rounded-lg bg-muted text-xl font-bold text-foreground border border-border focus:outline-none focus:ring-2 focus:ring-ring"
 										autoFocus
 									/>
 								</div>
 							) : (
 								<h1
-									className={`text-lg font-semibold text-foreground ${isOwner ? "cursor-pointer hover:text-primary" : ""}`}
+									className={`text-xl font-bold tracking-tight text-foreground ${isOwner ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
 									onClick={
 										isOwner
 											? () => {
@@ -354,10 +354,11 @@ export function SceneMixer({
 						<div className="flex items-center gap-2 pt-1">
 							<Button
 								variant={playing ? "default" : "secondary"}
+								size="lg"
 								onClick={handlePlayPause}
 								disabled={readyLayers.length === 0}
 							>
-								{playing ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
+								{playing ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
 								{playing ? "Pause" : "Play"}
 							</Button>
 
@@ -429,17 +430,17 @@ export function SceneMixer({
 
 			{/* Generation progress */}
 			{generating && (
-				<Card className="p-4">
+				<Card className="p-5 animate-fade-up" style={{ animationDelay: "0.1s" }}>
 					<div className="flex items-center gap-3">
 						<SpinnerIcon
-							size={16}
+							size={18}
 							className="animate-spin text-primary"
 						/>
-						<p className="text-sm text-muted-foreground">
+						<p className="text-sm font-medium text-foreground">
 							{!progress
-								? "AI is designing your soundscape..."
+								? "Designing your soundscape..."
 								: progress.completed === 0
-									? "Generating audio for all layers..."
+									? "Generating audio layers..."
 									: `${progress.completed} of ${progress.total} layers ready`}
 						</p>
 					</div>
@@ -449,7 +450,7 @@ export function SceneMixer({
 			{/* Layer cards */}
 			{layers.length > 0 && (
 				<div className="space-y-3">
-					<p className="text-sm font-semibold text-foreground">
+					<p className="text-xs font-medium tracking-wide uppercase text-muted-foreground animate-fade-up" style={{ animationDelay: "0.12s" }}>
 						{isOwner ? `Layers (${layers.length})` : `${layers.length} Layers`}
 					</p>
 					{layers.map((layer, index) => (
@@ -463,6 +464,8 @@ export function SceneMixer({
 							onToggle={handleToggle}
 							onRegenerate={handleRegenerate}
 							onRemove={handleRemove}
+							className="animate-fade-up"
+							style={{ animationDelay: `${0.15 + index * 0.06}s` }}
 						/>
 					))}
 				</div>
