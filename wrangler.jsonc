@@ -1,15 +1,9 @@
-/**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
- */
 {
-	"$schema": "../../node_modules/wrangler/config-schema.json",
+	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "cf-elevenhacks",
 	"main": "src/server.ts",
 	"compatibility_date": "2026-01-28",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
+	"compatibility_flags": ["nodejs_compat"],
 	// Bindings
 	"ai": {
 		"binding": "AI",
@@ -40,11 +34,7 @@
 	// Static assets — SPA with worker routes for agents and audio
 	"assets": {
 		"not_found_handling": "single-page-application",
-		"run_worker_first": [
-			"/api/*",
-			"/agents/*",
-			"/audio/*"
-		]
+		"run_worker_first": ["/api/*", "/agents/*", "/audio/*"]
 	},
 	// Durable Object agents
 	"durable_objects": {
@@ -70,10 +60,7 @@
 			"tag": "v1"
 		},
 		{
-			"new_sqlite_classes": [
-				"SceneAgent",
-				"GalleryAgent"
-			],
+			"new_sqlite_classes": ["SceneAgent", "GalleryAgent"],
 			"deleted_classes": [
 				"VoiceChatAgent",
 				"SoundscapeAgent",

@@ -9,7 +9,7 @@
       (() => {
         const stored = localStorage.getItem("theme");
         const mode = stored || "light";
-        document.documentElement.setAttribute("data-mode", mode);
+        if (mode === "dark") document.documentElement.classList.add("dark");
         document.documentElement.style.colorScheme = mode;
       })();
     </script>
