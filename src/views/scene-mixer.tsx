@@ -39,6 +39,7 @@ interface SceneMixerProps {
   sceneId: string;
   isNew?: boolean;
   initialPrompt?: string;
+  initialLayerCount?: number;
   onNavigateHome: () => void;
 }
 
@@ -46,6 +47,7 @@ export function SceneMixer({
   sceneId,
   isNew,
   initialPrompt,
+  initialLayerCount,
   onNavigateHome
 }: SceneMixerProps) {
   const [connected, setConnected] = useState(false);
@@ -82,7 +84,7 @@ export function SceneMixer({
     if (isNew && connected && initialPrompt && !generationTriggered) {
       setGenerationTriggered(true);
       addOwnedScene(sceneId);
-      agent.call("generateScene", [initialPrompt, 5]);
+      agent.call("generateScene", [initialPrompt, initialLayerCount ?? 5]);
     }
   }, [isNew, connected, initialPrompt, generationTriggered, sceneId, agent]);
 

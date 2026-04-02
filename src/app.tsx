@@ -76,11 +76,13 @@ function useRoute(): {
 export default function App() {
   const [route, setRoute] = useState(useRoute);
   const [newScenePrompt, setNewScenePrompt] = useState<string | null>(null);
+  const [newSceneLayerCount, setNewSceneLayerCount] = useState<number>(5);
 
   const handleGenerate = useCallback(
     (description: string, layerCount: number) => {
       const id = crypto.randomUUID();
       setNewScenePrompt(description);
+      setNewSceneLayerCount(layerCount);
       window.history.pushState({}, "", `/scene/${id}`);
       setRoute({ view: "scene", sceneId: id });
     },
@@ -149,6 +151,7 @@ export default function App() {
                 sceneId={route.sceneId}
                 isNew={newScenePrompt !== null}
                 initialPrompt={newScenePrompt ?? undefined}
+                initialLayerCount={newSceneLayerCount}
                 onNavigateHome={handleNavigateHome}
               />
             )}
