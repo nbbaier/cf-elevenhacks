@@ -5,6 +5,64 @@
 
 const CROSSFADE_DURATION = 1.5;
 
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
+interface PanController {
+  connect(destination: AudioNode): void;
+  disconnect(): void;
+  readonly input: AudioNode;
+  setPan(pan: number, time: number): void;
+}
+
+class StereoPanController implements PanController {
+  readonly input: AudioNode;
+  private readonly node: StereoPannerNode;
+
+  constructor(node: StereoPannerNode) {
+    this.node = node;
+    this.input = node;
+  }
+
+  connect(destination: AudioNode): void {
+    this.node.connect(destination);
+  }
+
+  disconnect(): void {
+    this.node.disconnect();
+  }
+
+  setPan(pan: number, time: number): void {
+    this.node.pan.setTargetAtTime(pan, time, 0.05);
+  }
+}
+
+class GainPanFallbackController implements PanController {
+  readonly input: AudioNode;
+  private readonly node: GainNode;
+
+  constructor(node: GainNode) {
+    this.node = node;
+    this.input = node;
+  }
+
+  connect(destination: AudioNode): void {
+    this.node.connect(destination);
+  }
+
+  disconnect(): void {
+    this.node.disconnect();
+  }
+
+  setPan(): void {
+    // Older mobile browsers may not support stereo panning.
+    // Fallback keeps playback working and treats pan as centered.
+  }
+}
+
 interface LayerPlayback {
   activeFadeGain: GainNode | null;
   activeSource: AudioBufferSourceNode | null;
@@ -13,7 +71,7 @@ interface LayerPlayback {
   enabled: boolean;
   gainNode: GainNode;
   id: string;
-  panNode: StereoPannerNode;
+  panNode: PanController;
   volume: number;
 }
 
@@ -24,9 +82,25 @@ export class PlaybackEngine {
 
   private getContext(): AudioContext {
     if (!this.ctx) {
-      this.ctx = new AudioContext();
+      const AudioContextCtor = window.AudioContext ?? window.webkitAudioContext;
+      if (!AudioContextCtor) {
+        throw new Error("Web Audio API is not supported in this browser");
+      }
+      this.ctx = new AudioContextCtor();
     }
     return this.ctx;
+  }
+
+  private createPanController(ctx: AudioContext): PanController {
+    if ("createStereoPanner" in ctx) {
+      try {
+        return new StereoPanController(ctx.createStereoPanner());
+      } catch {
+        // Fall back to a centered gain node on browsers with partial support.
+      }
+    }
+
+    return new GainPanFallbackController(ctx.createGain());
   }
 
   /** Load audio for a layer from a URL. */
@@ -49,10 +123,10 @@ export class PlaybackEngine {
     const buffer = await ctx.decodeAudioData(arrayBuffer);
 
     const gainNode = ctx.createGain();
-    const panNode = ctx.createStereoPanner();
+    const panNode = this.createPanController(ctx);
 
     gainNode.gain.value = enabled ? volume : 0;
-    panNode.pan.value = pan;
+    panNode.setPan(pan, ctx.currentTime);
 
     panNode.connect(gainNode);
     gainNode.connect(ctx.destination);
@@ -94,7 +168,7 @@ export class PlaybackEngine {
       source.buffer = layer.buffer;
 
       const fadeGain = ctx.createGain();
-      fadeGain.connect(layer.panNode);
+      fadeGain.connect(layer.panNode.input);
       source.connect(fadeGain);
 
       const now = ctx.currentTime;
@@ -189,7 +263,7 @@ export class PlaybackEngine {
     if (!layer) {
       return;
     }
-    layer.panNode.pan.setTargetAtTime(pan, this.getContext().currentTime, 0.05);
+    layer.panNode.setPan(pan, this.getContext().currentTime);
   }
 
   /** Enable or disable a layer. */
@@ -223,17 +297,27 @@ export class PlaybackEngine {
   }
 
   /** Start playback of all enabled layers. */
-  play(): void {
+  async play(): Promise<boolean> {
     const ctx = this.getContext();
-    if (ctx.state === "suspended") {
-      ctx.resume();
+    if (ctx.state !== "running") {
+      try {
+        await ctx.resume();
+      } catch {
+        return false;
+      }
     }
+
+    if (ctx.state !== "running") {
+      return false;
+    }
+
     this._playing = true;
     for (const layer of this.layers.values()) {
       if (layer.enabled && layer.buffer) {
         this.startLayerLoop(layer);
       }
     }
+    return true;
   }
 
   /** Pause all layers. */

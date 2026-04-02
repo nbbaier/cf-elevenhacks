@@ -59,6 +59,7 @@ export function SceneMixer({
   const [editingAuthor, setEditingAuthor] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [playPending, setPlayPending] = useState(false);
   const [generationTriggered, setGenerationTriggered] = useState(false);
   const engineRef = useRef<PlaybackEngine | null>(null);
   const lastSyncedSceneKeyRef = useRef<string | null>(null);
@@ -258,7 +259,7 @@ export function SceneMixer({
     }
   }, [agent, addLayerPrompt, addLayerName, addLayerType]);
 
-  const handlePlayPause = useCallback(() => {
+  const handlePlayPause = useCallback(async () => {
     const engine = engineRef.current;
     if (!engine) {
       return;
@@ -268,7 +269,15 @@ export function SceneMixer({
       engine.pause();
       setPlaying(false);
     } else {
-      engine.play();
+      setPlayPending(true);
+      const started = await engine.play();
+      setPlayPending(false);
+
+      if (!started) {
+        toast.error("Playback couldn't start on this device");
+        return;
+      }
+
       setPlaying(true);
     }
   }, [playing]);
@@ -382,6 +391,16 @@ export function SceneMixer({
   );
   const isPlayableWhileGenerating =
     generating && readyLayerCount >= playableThreshold;
+
+  let playIcon = <PlayIcon size={18} />;
+  let playLabel = "Play";
+  if (playPending) {
+    playIcon = <SpinnerIcon className="animate-spin" size={18} />;
+    playLabel = "Starting...";
+  } else if (playing) {
+    playIcon = <PauseIcon size={18} />;
+    playLabel = "Pause";
+  }
 
   let titleMode: "editing" | "editable" | "readonly";
   if (editingTitle && isOwner) {
@@ -547,13 +566,13 @@ export function SceneMixer({
             {/* Playback + actions */}
             <div className="flex items-center gap-2 pt-1">
               <Button
-                disabled={readyLayers.length === 0}
+                disabled={playPending || readyLayers.length === 0}
                 onClick={handlePlayPause}
                 size="lg"
                 variant={playing ? "default" : "secondary"}
               >
-                {playing ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
-                {playing ? "Pause" : "Play"}
+                {playIcon}
+                {playLabel}
               </Button>
 
               {isOwner && !scene.isPublic && (
