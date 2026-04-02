@@ -207,6 +207,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
   }
 
   /** Regenerate a layer's audio, optionally with a new prompt. */
+  /** Regenerate a layer's audio, optionally with a new prompt. */
   @callable()
   async regenerateLayer(
     layerId: string,
@@ -217,6 +218,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
 
     const prompt = newPrompt || layer.prompt;
     const newLayerId = crypto.randomUUID();
+    const oldR2Key = layer.r2Key;
 
     // Mark layer as regenerating (clear r2Key, assign new ID)
     this.setState({
@@ -227,6 +229,15 @@ export class SceneAgent extends Agent<Env, SceneState> {
           : l
       )
     });
+
+    // Delete old audio from R2
+    if (oldR2Key) {
+      try {
+        await this.env.AUDIO_BUCKET.delete(oldR2Key);
+      } catch (e) {
+        console.error("Failed to delete old audio:", e);
+      }
+    }
 
     try {
       const gen =
