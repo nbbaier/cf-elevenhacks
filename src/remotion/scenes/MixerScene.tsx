@@ -190,17 +190,17 @@ export function MixerScene() {
           opacity: labelOpacity,
           display: "flex",
           alignItems: "center",
-          gap: 10,
+          gap: 12,
         }}
       >
         <div
           style={{
-            width: 28,
-            height: 28,
+            width: 36,
+            height: 36,
             borderRadius: 999,
             background: C.primary,
             color: C.primaryFg,
-            fontSize: 13,
+            fontSize: 16,
             fontWeight: 700,
             display: "flex",
             alignItems: "center",
@@ -209,7 +209,7 @@ export function MixerScene() {
         >
           3
         </div>
-        <span style={{ fontSize: 18, color: C.mutedFg, fontWeight: 500 }}>
+        <span style={{ fontSize: 24, color: C.mutedFg, fontWeight: 500 }}>
           Mix layers live — volume, pan, enable/disable
         </span>
       </div>
@@ -219,18 +219,18 @@ export function MixerScene() {
         <div
           style={{
             position: "absolute",
-            right: 120,
+            right: 60,
             top: "48%",
             opacity: calloutOpacity,
             background: C.card,
             border: `1px solid ${C.primary}60`,
             borderRadius: RADIUS,
-            padding: "8px 14px",
-            fontSize: 13,
+            padding: "10px 18px",
+            fontSize: 16,
             color: C.primary,
             fontWeight: 500,
             whiteSpace: "nowrap",
-            boxShadow: `0 4px 20px ${C.primary}20`,
+            boxShadow: `0 4px 24px ${C.primary}25`,
           }}
         >
           ← toggle any layer on/off
@@ -241,10 +241,10 @@ export function MixerScene() {
         <AppWindow>
           <div
             style={{
-              padding: "24px 36px",
+              padding: "32px 48px",
               display: "flex",
               flexDirection: "column",
-              gap: 16,
+              gap: 20,
             }}
           >
             {/* Scene header card */}
@@ -253,22 +253,22 @@ export function MixerScene() {
                 background: C.card,
                 border: `1px solid ${C.cardBorder}`,
                 borderRadius: RADIUS,
-                padding: "16px 20px",
+                padding: "20px 26px",
                 display: "flex",
                 flexDirection: "column",
-                gap: 12,
+                gap: 14,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <WaveformSvg
                   animated={isPlaying}
                   color={C.primary}
                   frame={frame}
-                  size={22}
+                  size={28}
                 />
                 <span
                   style={{
-                    fontSize: 17,
+                    fontSize: 22,
                     fontWeight: 700,
                     color: C.fg,
                     letterSpacing: "-0.3px",
@@ -279,7 +279,7 @@ export function MixerScene() {
                 </span>
               </div>
               <span
-                style={{ fontSize: 12, color: C.mutedFg, fontFamily: FONT }}
+                style={{ fontSize: 15, color: C.mutedFg, fontFamily: FONT }}
               >
                 by you
               </span>
@@ -314,7 +314,7 @@ export function MixerScene() {
             {/* Layers label */}
             <div
               style={{
-                fontSize: 11,
+                fontSize: 13,
                 fontWeight: 600,
                 color: C.mutedFg,
                 textTransform: "uppercase",
@@ -336,11 +336,11 @@ export function MixerScene() {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 10,
-                    padding: "10px 14px",
+                    gap: 14,
+                    padding: "14px 18px",
                     background: C.card,
                     border: `1px solid ${C.cardBorder}`,
-                    borderLeft: `3px solid ${enabled ? layer.color : C.muted}`,
+                    borderLeft: `4px solid ${enabled ? layer.color : C.muted}`,
                     borderRadius: RADIUS,
                     opacity: rowOpacity,
                     transition: "opacity 0.2s",
@@ -349,16 +349,16 @@ export function MixerScene() {
                   {/* Toggle */}
                   <div
                     style={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: 4,
+                      width: 20,
+                      height: 20,
+                      borderRadius: 5,
                       background: enabled ? layer.color : C.muted,
                       border: `1.5px solid ${enabled ? layer.color : C.mutedFg}`,
                       flexShrink: 0,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: 10,
+                      fontSize: 12,
                       color: C.bg,
                       fontWeight: 700,
                     }}
@@ -369,8 +369,8 @@ export function MixerScene() {
                   {/* Name */}
                   <span
                     style={{
-                      width: 160,
-                      fontSize: 12,
+                      width: 220,
+                      fontSize: 15,
                       fontWeight: 500,
                       color: enabled ? C.fg : C.mutedFg,
                       fontFamily: FONT,

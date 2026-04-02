@@ -75,17 +75,17 @@ export function ShareScene() {
           opacity: labelOpacity,
           display: "flex",
           alignItems: "center",
-          gap: 10,
+          gap: 12,
         }}
       >
         <div
           style={{
-            width: 28,
-            height: 28,
+            width: 36,
+            height: 36,
             borderRadius: 999,
             background: C.primary,
             color: C.primaryFg,
-            fontSize: 13,
+            fontSize: 16,
             fontWeight: 700,
             display: "flex",
             alignItems: "center",
@@ -94,7 +94,7 @@ export function ShareScene() {
         >
           4
         </div>
-        <span style={{ fontSize: 18, color: C.mutedFg, fontWeight: 500 }}>
+        <span style={{ fontSize: 24, color: C.mutedFg, fontWeight: 500 }}>
           Publish, share, and let others fork your scene
         </span>
       </div>
@@ -129,10 +129,10 @@ export function ShareScene() {
         <AppWindow>
           <div
             style={{
-              padding: "24px 36px",
+              padding: "32px 48px",
               display: "flex",
               flexDirection: "column",
-              gap: 16,
+              gap: 20,
             }}
           >
             {/* Scene header */}
@@ -141,17 +141,17 @@ export function ShareScene() {
                 background: C.card,
                 border: `1px solid ${C.cardBorder}`,
                 borderRadius: RADIUS,
-                padding: "16px 20px",
+                padding: "20px 26px",
                 display: "flex",
                 flexDirection: "column",
-                gap: 12,
+                gap: 14,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <WaveformSvg color={C.primary} size={22} />
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <WaveformSvg color={C.primary} size={28} />
                 <span
                   style={{
-                    fontSize: 17,
+                    fontSize: 22,
                     fontWeight: 700,
                     color: C.fg,
                     letterSpacing: "-0.3px",
@@ -192,11 +192,11 @@ export function ShareScene() {
                   padding: "10px 14px",
                 }}
               >
-                <span style={{ fontSize: 16, color: C.primary }}>🔗</span>
+                <span style={{ fontSize: 20, color: C.primary }}>🔗</span>
                 <code
                   style={{
                     flex: 1,
-                    fontSize: 12,
+                    fontSize: 15,
                     color: C.fg,
                     fontFamily: "monospace",
                     overflow: "hidden",
@@ -204,9 +204,9 @@ export function ShareScene() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  soundscaper.app/scene/rainy-tokyo-abc123
+                  soundscaper.nicobaier.com/scene/rainy-tokyo-abc123
                 </code>
-                <span style={{ fontSize: 12, color: C.mutedFg, flexShrink: 0 }}>
+                <span style={{ fontSize: 15, color: C.mutedFg, flexShrink: 0 }}>
                   Copied!
                 </span>
               </div>
@@ -231,8 +231,8 @@ export function ShareScene() {
                 <p
                   style={{
                     margin: 0,
-                    marginBottom: 4,
-                    fontSize: 14,
+                    marginBottom: 6,
+                    fontSize: 18,
                     fontWeight: 600,
                     color: C.fg,
                     fontFamily: FONT,
@@ -243,7 +243,7 @@ export function ShareScene() {
                 <p
                   style={{
                     margin: 0,
-                    fontSize: 12,
+                    fontSize: 15,
                     color: C.mutedFg,
                     fontFamily: FONT,
                   }}

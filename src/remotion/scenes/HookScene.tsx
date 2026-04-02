@@ -52,6 +52,12 @@ export function HookScene() {
     config: { damping: 18 },
   });
 
+  // Pulsing glow scale
+  const glowScale = 1 + 0.08 * Math.sin(frame * 0.06);
+  // Drifting secondary orb
+  const orbX = 60 * Math.sin(frame * 0.025);
+  const orbY = 40 * Math.cos(frame * 0.018);
+
   return (
     <div
       style={{
@@ -68,16 +74,31 @@ export function HookScene() {
         overflow: "hidden",
       }}
     >
-      {/* Subtle radial glow */}
+      {/* Primary pulsing radial glow */}
       <div
         style={{
           position: "absolute",
-          width: 800,
-          height: 800,
+          width: 1100,
+          height: 1100,
           borderRadius: 999,
-          background: `radial-gradient(circle, ${C.primary}18 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${C.primary}20 0%, transparent 65%)`,
           top: "50%",
           left: "50%",
+          transform: `translate(-50%, -50%) scale(${glowScale})`,
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Drifting secondary orb */}
+      <div
+        style={{
+          position: "absolute",
+          width: 600,
+          height: 600,
+          borderRadius: 999,
+          background: "radial-gradient(circle, #60a5fa18 0%, transparent 70%)",
+          top: `calc(30% + ${orbY}px)`,
+          left: `calc(65% + ${orbX}px)`,
           transform: "translate(-50%, -50%)",
           pointerEvents: "none",
         }}
@@ -88,10 +109,10 @@ export function HookScene() {
         style={{
           opacity: titleOpacity,
           transform: `translateY(${titleY}px)`,
-          marginBottom: 24,
+          marginBottom: 28,
         }}
       >
-        <WaveformSvg animated color={C.primary} frame={frame} size={64} />
+        <WaveformSvg animated color={C.primary} frame={frame} size={96} />
       </div>
 
       {/* Title */}
@@ -99,11 +120,11 @@ export function HookScene() {
         style={{
           opacity: titleOpacity,
           transform: `translateY(${titleY}px)`,
-          fontSize: 72,
+          fontSize: 104,
           fontWeight: 800,
           color: C.fg,
-          letterSpacing: "-2px",
-          marginBottom: 16,
+          letterSpacing: "-3px",
+          marginBottom: 20,
         }}
       >
         Soundscaper
@@ -114,13 +135,13 @@ export function HookScene() {
         style={{
           opacity: taglineOpacity,
           transform: `translateY(${taglineY}px)`,
-          fontSize: 26,
+          fontSize: 36,
           color: C.mutedFg,
           fontWeight: 400,
-          letterSpacing: "-0.3px",
-          marginBottom: 52,
+          letterSpacing: "-0.4px",
+          marginBottom: 60,
           textAlign: "center",
-          maxWidth: 600,
+          maxWidth: 800,
         }}
       >
         Type a scene.{" "}
@@ -135,9 +156,9 @@ export function HookScene() {
           opacity: layersOpacity,
           display: "flex",
           flexDirection: "column",
-          gap: 8,
-          width: 480,
-          marginBottom: 40,
+          gap: 10,
+          width: 720,
+          marginBottom: 48,
         }}
       >
         {LAYER_DATA.map((l, i) => {
@@ -145,8 +166,20 @@ export function HookScene() {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
           });
+          const itemScale = interpolate(
+            frame - 35 - i * 6,
+            [0, 20],
+            [0.94, 1],
+            {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+            }
+          );
           return (
-            <div key={l.label} style={{ opacity: itemOpacity }}>
+            <div
+              key={l.label}
+              style={{ opacity: itemOpacity, transform: `scale(${itemScale})` }}
+            >
               <LayerBar
                 color={l.color}
                 enabled
@@ -163,7 +196,7 @@ export function HookScene() {
       <div
         style={{
           opacity: badgeOpacity,
-          fontSize: 15,
+          fontSize: 20,
           color: C.mutedFg,
           fontStyle: "italic",
           letterSpacing: "0.1px",

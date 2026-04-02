@@ -7,12 +7,12 @@ export function AppWindow({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
-        width: 860,
+        width: 1380,
         background: C.bg,
         borderRadius: RADIUS * 1.6,
         overflow: "hidden",
         boxShadow:
-          "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
+          "0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.07)",
         fontFamily: FONT,
       }}
     >
@@ -21,19 +21,19 @@ export function AppWindow({ children }: { children: ReactNode }) {
         style={{
           background: C.card,
           borderBottom: `1px solid ${C.cardBorder}`,
-          padding: "12px 20px",
+          padding: "14px 24px",
           display: "flex",
           alignItems: "center",
-          gap: 12,
+          gap: 14,
         }}
       >
-        <div style={{ display: "flex", gap: 7 }}>
+        <div style={{ display: "flex", gap: 8 }}>
           {["#ef4444", "#f59e0b", "#22c55e"].map((c) => (
             <div
               key={c}
               style={{
-                width: 12,
-                height: 12,
+                width: 14,
+                height: 14,
                 borderRadius: 999,
                 background: c,
               }}
@@ -45,13 +45,13 @@ export function AppWindow({ children }: { children: ReactNode }) {
             flex: 1,
             background: C.muted,
             borderRadius: 8,
-            padding: "4px 12px",
-            fontSize: 12,
+            padding: "5px 14px",
+            fontSize: 14,
             color: C.mutedFg,
             fontFamily: FONT,
           }}
         >
-          soundscaper.app
+          soundscaper.nicobaier.com
         </div>
       </div>
 
@@ -60,18 +60,18 @@ export function AppWindow({ children }: { children: ReactNode }) {
         style={{
           background: C.card,
           borderBottom: `1px solid ${C.cardBorder}`,
-          padding: "12px 24px",
+          padding: "14px 28px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <WaveformSvg color={C.primary} size={20} />
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <WaveformSvg color={C.primary} size={24} />
           <span
             style={{
               fontWeight: 700,
-              fontSize: 15,
+              fontSize: 18,
               color: C.fg,
               letterSpacing: "-0.3px",
               fontFamily: FONT,
@@ -82,14 +82,14 @@ export function AppWindow({ children }: { children: ReactNode }) {
         </div>
         <div
           style={{
-            width: 28,
-            height: 28,
+            width: 32,
+            height: 32,
             borderRadius: 999,
             background: C.primary,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 11,
+            fontSize: 13,
             fontWeight: 700,
             color: C.primaryFg,
             fontFamily: FONT,
@@ -271,8 +271,8 @@ export function LayerBar({
       {!generating && (
         <div
           style={{
-            width: 80,
-            height: 3,
+            width: 120,
+            height: 4,
             background: C.muted,
             borderRadius: 999,
             overflow: "hidden",

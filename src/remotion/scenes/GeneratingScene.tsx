@@ -58,17 +58,17 @@ export function GeneratingScene() {
           opacity: labelOpacity,
           display: "flex",
           alignItems: "center",
-          gap: 10,
+          gap: 12,
         }}
       >
         <div
           style={{
-            width: 28,
-            height: 28,
+            width: 36,
+            height: 36,
             borderRadius: 999,
             background: C.primary,
             color: C.primaryFg,
-            fontSize: 13,
+            fontSize: 16,
             fontWeight: 700,
             display: "flex",
             alignItems: "center",
@@ -77,7 +77,7 @@ export function GeneratingScene() {
         >
           2
         </div>
-        <span style={{ fontSize: 18, color: C.mutedFg, fontWeight: 500 }}>
+        <span style={{ fontSize: 24, color: C.mutedFg, fontWeight: 500 }}>
           ElevenLabs generates each audio layer
         </span>
       </div>
@@ -86,10 +86,10 @@ export function GeneratingScene() {
         <AppWindow>
           <div
             style={{
-              padding: "28px 40px",
+              padding: "36px 52px",
               display: "flex",
               flexDirection: "column",
-              gap: 16,
+              gap: 20,
             }}
           >
             {/* Progress card */}
@@ -98,18 +98,18 @@ export function GeneratingScene() {
                 background: C.card,
                 border: `1px solid ${C.cardBorder}`,
                 borderRadius: 10,
-                padding: "14px 18px",
+                padding: "18px 22px",
                 display: "flex",
                 alignItems: "center",
-                gap: 12,
+                gap: 14,
               }}
             >
               {/* Spinner */}
               <svg
-                height={18}
+                height={24}
                 style={{ transform: `rotate(${spinDeg}deg)`, flexShrink: 0 }}
                 viewBox="0 0 18 18"
-                width={18}
+                width={24}
               >
                 <circle
                   cx={9}
@@ -124,7 +124,7 @@ export function GeneratingScene() {
               </svg>
               <span
                 style={{
-                  fontSize: 14,
+                  fontSize: 18,
                   fontWeight: 500,
                   color: C.fg,
                   fontFamily: FONT,
@@ -137,7 +137,7 @@ export function GeneratingScene() {
             {/* Layer label */}
             <div
               style={{
-                fontSize: 11,
+                fontSize: 13,
                 fontWeight: 600,
                 color: C.mutedFg,
                 textTransform: "uppercase",
@@ -166,7 +166,11 @@ export function GeneratingScene() {
                   extrapolateLeft: "clamp",
                   extrapolateRight: "clamp",
                 });
-                const itemY = interpolate(layerFrame, [0, 20], [12, 0], {
+                const itemY = interpolate(layerFrame, [0, 20], [16, 0], {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp",
+                });
+                const itemScale = interpolate(layerFrame, [0, 22], [0.93, 1], {
                   extrapolateLeft: "clamp",
                   extrapolateRight: "clamp",
                 });
@@ -176,7 +180,7 @@ export function GeneratingScene() {
                     key={layer.label}
                     style={{
                       opacity: itemOpacity,
-                      transform: `translateY(${itemY}px)`,
+                      transform: `translateY(${itemY}px) scale(${itemScale})`,
                     }}
                   >
                     <LayerBar

@@ -113,6 +113,12 @@ export function OutroScene() {
     config: { damping: 18 },
   });
 
+  // Pulsing glow
+  const glowScale = 1 + 0.1 * Math.sin(frame * 0.06);
+  // Drifting secondary orb
+  const orbX = 80 * Math.sin(frame * 0.022);
+  const orbY = 50 * Math.cos(frame * 0.016);
+
   return (
     <div
       style={{
@@ -130,16 +136,31 @@ export function OutroScene() {
         overflow: "hidden",
       }}
     >
-      {/* Glow */}
+      {/* Primary pulsing glow */}
       <div
         style={{
           position: "absolute",
-          width: 600,
-          height: 600,
+          width: 900,
+          height: 900,
           borderRadius: 999,
-          background: `radial-gradient(circle, ${C.primary}22 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${C.primary}28 0%, transparent 65%)`,
           top: "50%",
           left: "50%",
+          transform: `translate(-50%, -50%) scale(${glowScale})`,
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Drifting secondary orb */}
+      <div
+        style={{
+          position: "absolute",
+          width: 500,
+          height: 500,
+          borderRadius: 999,
+          background: "radial-gradient(circle, #34d39920 0%, transparent 70%)",
+          top: `calc(35% + ${orbY}px)`,
+          left: `calc(70% + ${orbX}px)`,
           transform: "translate(-50%, -50%)",
           pointerEvents: "none",
         }}
@@ -150,10 +171,10 @@ export function OutroScene() {
         style={{
           opacity: waveOpacity,
           transform: `translateY(${waveY}px)`,
-          marginBottom: 20,
+          marginBottom: 24,
         }}
       >
-        <WaveformSvg animated color={C.primary} frame={frame} size={56} />
+        <WaveformSvg animated color={C.primary} frame={frame} size={80} />
       </div>
 
       {/* Title */}
@@ -161,11 +182,11 @@ export function OutroScene() {
         style={{
           opacity: titleOpacity,
           transform: `translateY(${titleY}px)`,
-          fontSize: 68,
+          fontSize: 96,
           fontWeight: 800,
           color: C.fg,
-          letterSpacing: "-2px",
-          marginBottom: 14,
+          letterSpacing: "-3px",
+          marginBottom: 18,
         }}
       >
         Soundscaper
@@ -175,12 +196,12 @@ export function OutroScene() {
       <div
         style={{
           opacity: tagOpacity,
-          fontSize: 22,
+          fontSize: 30,
           color: C.mutedFg,
           fontWeight: 400,
-          marginBottom: 52,
+          marginBottom: 60,
           textAlign: "center",
-          maxWidth: 560,
+          maxWidth: 720,
           lineHeight: 1.5,
         }}
       >
@@ -197,8 +218,8 @@ export function OutroScene() {
           transform: `translateY(${badgesY}px)`,
           display: "flex",
           alignItems: "center",
-          gap: 20,
-          marginBottom: 40,
+          gap: 28,
+          marginBottom: 48,
         }}
       >
         {/* ElevenLabs badge */}
@@ -206,17 +227,17 @@ export function OutroScene() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
+            gap: 12,
             background: C.card,
             border: `1px solid ${C.cardBorder}`,
             borderRadius: 999,
-            padding: "10px 20px",
+            padding: "14px 28px",
           }}
         >
-          <ElevenLabsLogo size={22} />
+          <ElevenLabsLogo size={28} />
           <span
             style={{
-              fontSize: 15,
+              fontSize: 20,
               color: C.fg,
               fontWeight: 600,
               fontFamily: FONT,
@@ -226,24 +247,24 @@ export function OutroScene() {
           </span>
         </div>
 
-        <span style={{ fontSize: 22, color: C.mutedFg }}>×</span>
+        <span style={{ fontSize: 28, color: C.mutedFg }}>×</span>
 
         {/* Cloudflare badge */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
+            gap: 12,
             background: C.card,
             border: `1px solid ${C.cardBorder}`,
             borderRadius: 999,
-            padding: "10px 20px",
+            padding: "14px 28px",
           }}
         >
-          <CloudflareIcon size={22} />
+          <CloudflareIcon size={28} />
           <span
             style={{
-              fontSize: 15,
+              fontSize: 20,
               color: C.fg,
               fontWeight: 600,
               fontFamily: FONT,
@@ -258,13 +279,28 @@ export function OutroScene() {
       <div
         style={{
           opacity: hashOpacity,
-          fontSize: 17,
+          fontSize: 24,
           color: C.primary,
           fontWeight: 600,
           letterSpacing: "0.02em",
+          marginBottom: 16,
         }}
       >
         #ElevenHacks
+      </div>
+
+      {/* URL */}
+      <div
+        style={{
+          opacity: hashOpacity,
+          fontSize: 20,
+          color: C.mutedFg,
+          fontWeight: 500,
+          letterSpacing: "0.01em",
+          fontFamily: "monospace",
+        }}
+      >
+        soundscaper.nicobaier.com
       </div>
     </div>
   );
