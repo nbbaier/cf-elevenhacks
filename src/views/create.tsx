@@ -4,11 +4,15 @@ import {
   MagicWandIcon,
   WaveformIcon,
   MinusIcon,
-  PlusIcon
+  PlusIcon,
+  ClockIcon,
+  TrashIcon
 } from "@phosphor-icons/react";
+import { getOwnedScenes, removeOwnedScene, type OwnedScene } from "../lib/owned-scenes";
 
 interface CreateViewProps {
   onGenerate: (description: string, layerCount: number) => void;
+  onNavigateToScene: (sceneId: string) => void;
 }
 
 const PRESETS = [
@@ -20,9 +24,10 @@ const PRESETS = [
   "Mountain cabin during a thunderstorm"
 ];
 
-export function CreateView({ onGenerate }: CreateViewProps) {
+export function CreateView({ onGenerate, onNavigateToScene }: CreateViewProps) {
   const [description, setDescription] = useState("");
   const [layerCount, setLayerCount] = useState(5);
+  const [ownedScenes, setOwnedScenes] = useState<OwnedScene[]>(() => getOwnedScenes());
 
   const handleGenerate = useCallback(() => {
     const desc = description.trim();
@@ -114,6 +119,50 @@ export function CreateView({ onGenerate }: CreateViewProps) {
           ))}
         </div>
       </div>
+
+      {/* My Soundscapes */}
+      {ownedScenes.length > 0 && (
+        <div className="space-y-3">
+          <Text size="sm" bold>
+            My Soundscapes
+          </Text>
+          <div className="space-y-2">
+            {ownedScenes.map((scene) => (
+              <Surface
+                key={scene.id}
+                className="p-4 rounded-xl ring ring-kumo-line hover:ring-kumo-accent transition-colors cursor-pointer"
+                onClick={() => onNavigateToScene(scene.id)}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <WaveformIcon size={16} className="text-kumo-accent shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-kumo-default truncate">
+                        {scene.title}
+                      </p>
+                      <p className="text-xs text-kumo-subtle flex items-center gap-1">
+                        <ClockIcon size={10} />
+                        {new Date(scene.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeOwnedScene(scene.id);
+                      setOwnedScenes(getOwnedScenes());
+                    }}
+                    className="text-kumo-subtle hover:text-kumo-danger shrink-0 p-1"
+                    aria-label="Remove from list"
+                  >
+                    <TrashIcon size={14} />
+                  </button>
+                </div>
+              </Surface>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

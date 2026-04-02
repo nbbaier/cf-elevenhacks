@@ -95,6 +95,12 @@ export default function App() {
     setNewScenePrompt(null);
   }, []);
 
+  const handleNavigateToScene = useCallback((sceneId: string) => {
+    window.history.pushState({}, "", `/scene/${sceneId}`);
+    setNewScenePrompt(null);
+    setRoute({ view: "scene", sceneId });
+  }, []);
+
   // Handle browser back/forward
   useEffect(() => {
     const handlePopState = () => {
@@ -148,7 +154,7 @@ export default function App() {
             }
           >
             {route.view === "create" && (
-              <CreateView onGenerate={handleGenerate} />
+              <CreateView onGenerate={handleGenerate} onNavigateToScene={handleNavigateToScene} />
             )}
             {route.view === "scene" && route.sceneId && (
               <SceneMixer

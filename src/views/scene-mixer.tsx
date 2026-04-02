@@ -19,22 +19,7 @@ import {
 } from "@phosphor-icons/react";
 import { LayerCard } from "../components/layer-card";
 import { PlaybackEngine } from "../lib/playback-engine";
-
-// Track which scenes this browser created
-function getOwnedScenes(): Set<string> {
-  try {
-    const raw = localStorage.getItem("ownedScenes");
-    return new Set(raw ? JSON.parse(raw) : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function addOwnedScene(id: string) {
-  const owned = getOwnedScenes();
-  owned.add(id);
-  localStorage.setItem("ownedScenes", JSON.stringify([...owned]));
-}
+import { isOwnedScene, addOwnedScene, updateOwnedScene } from "../lib/owned-scenes";
 
 interface SceneMixerProps {
   sceneId: string;
@@ -65,7 +50,7 @@ export function SceneMixer({
   const [generationTriggered, setGenerationTriggered] = useState(false);
   const engineRef = useRef<PlaybackEngine | null>(null);
 
-  const isOwner = getOwnedScenes().has(sceneId);
+  const isOwner = isOwnedScene(sceneId);
 
   const agent = useAgent<SceneAgent, SceneState>({
     agent: "SceneAgent",
@@ -84,10 +69,17 @@ export function SceneMixer({
   useEffect(() => {
     if (isNew && connected && initialPrompt && !generationTriggered) {
       setGenerationTriggered(true);
-      addOwnedScene(sceneId);
+      addOwnedScene(sceneId, initialPrompt.slice(0, 50), new Date().toISOString());
       agent.call("generateScene", [initialPrompt, initialLayerCount ?? 5]);
     }
   }, [isNew, connected, initialPrompt, generationTriggered, sceneId, agent]);
+
+  // Sync scene title to localStorage when it changes
+  useEffect(() => {
+    if (scene && isOwner) {
+      updateOwnedScene(sceneId, { title: scene.title });
+    }
+  }, [scene?.title, sceneId, isOwner]);
 
   // Initialize playback engine
   useEffect(() => {
@@ -198,7 +190,7 @@ export function SceneMixer({
     if (!data.scene) return;
 
     const newId = crypto.randomUUID();
-    addOwnedScene(newId);
+    addOwnedScene(newId, `${data.scene.title} (fork)`, new Date().toISOString());
 
     // Connect to the new scene agent and init from fork
     // We'll navigate to the new scene - the SceneMixer will handle it
@@ -245,7 +237,7 @@ export function SceneMixer({
           JSON.parse(forkData);
         agent.call("initFromFork", [sourceSceneId, sourceTitle, sourceLayers]);
         sessionStorage.removeItem(`fork:${sceneId}`);
-        addOwnedScene(sceneId);
+        addOwnedScene(sceneId, `${sourceTitle} (fork)`, new Date().toISOString());
         // Clean up URL
         window.history.replaceState({}, "", `/scene/${sceneId}`);
       }
