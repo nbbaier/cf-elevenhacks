@@ -130,7 +130,8 @@
 }
 
 @keyframes waveform-bar {
-   0%, 100% {
+   0%,
+   100% {
       height: var(--bar-min-h);
       y: calc(var(--bar-center-y) - var(--bar-min-h) / 2);
    }

@@ -25,6 +25,7 @@ export interface SceneData {
   createdAt: string;
   forkedFrom: string | null;
   isPublic: boolean;
+  ownerId: string | null;
 }
 
 export interface SceneState {
@@ -70,7 +71,8 @@ export class SceneAgent extends Agent<Env, SceneState> {
       authorName: null,
       createdAt: new Date().toISOString(),
       forkedFrom: null,
-      isPublic: false
+      isPublic: false,
+      ownerId: this.state.scene?.ownerId ?? null
     };
 
     // Create layer shells (no audio yet)
@@ -344,6 +346,20 @@ export class SceneAgent extends Agent<Env, SceneState> {
     return { scene: this.state.scene, layers: this.state.layers };
   }
 
+  /** Claim ownership of this scene for a user. Only works if unclaimed or already owned by the same user. */
+  @callable()
+  async claimScene(userId: string): Promise<boolean> {
+    if (!this.state.scene) return false;
+    const currentOwner = this.state.scene.ownerId ?? null;
+    if (currentOwner && currentOwner !== userId) return false;
+    if (currentOwner === userId) return true;
+    this.setState({
+      ...this.state,
+      scene: { ...this.state.scene, ownerId: userId }
+    });
+    return true;
+  }
+
   /** Initialize this scene as a fork of another scene. */
   @callable()
   async initFromFork(
@@ -357,7 +373,8 @@ export class SceneAgent extends Agent<Env, SceneState> {
       authorName: null,
       createdAt: new Date().toISOString(),
       forkedFrom: sourceSceneId,
-      isPublic: false
+      isPublic: false,
+      ownerId: null
     };
 
     // Copy R2 objects so each scene owns its own audio files

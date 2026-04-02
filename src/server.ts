@@ -14,6 +14,34 @@ export default {
       return auth.handler(request);
     }
 
+    // Claim scenes for authenticated user
+    if (url.pathname === "/api/claim-scenes" && request.method === "POST") {
+      const auth = createAuth(env, request);
+      const session = await auth.api.getSession({ headers: request.headers });
+      if (!session?.user?.id) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
+      const { sceneIds } = (await request.json()) as { sceneIds: string[] };
+      if (!Array.isArray(sceneIds) || sceneIds.length === 0) {
+        return new Response("Bad request", { status: 400 });
+      }
+
+      const results: { sceneId: string; claimed: boolean }[] = [];
+      for (const sceneId of sceneIds) {
+        try {
+          const doId = env.SceneAgent.idFromName(sceneId);
+          const stub = env.SceneAgent.get(doId);
+          const claimed = await stub.claimScene(session.user.id);
+          results.push({ sceneId, claimed });
+        } catch {
+          results.push({ sceneId, claimed: false });
+        }
+      }
+
+      return Response.json({ results });
+    }
+
     // Serve audio files from R2 at /audio/{r2Key}
     if (url.pathname.startsWith("/audio/")) {
       let key: string;

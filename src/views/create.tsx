@@ -1,17 +1,21 @@
-import { useState, useCallback } from "react";
+import {
+	ClockIcon,
+	MagicWandIcon,
+	MinusIcon,
+	PlusIcon,
+	TrashIcon,
+	WaveformIcon,
+} from "@phosphor-icons/react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import {
-	MagicWandIcon,
-	WaveformIcon,
-	MinusIcon,
-	PlusIcon,
-	ClockIcon,
-	TrashIcon,
-} from "@phosphor-icons/react";
 import { AnimatedWaveform } from "../components/animated-waveform";
-import { getOwnedScenes, removeOwnedScene, type OwnedScene } from "../lib/owned-scenes";
+import {
+	getOwnedScenes,
+	type OwnedScene,
+	removeOwnedScene,
+} from "../lib/owned-scenes";
 
 interface CreateViewProps {
 	onGenerate: (description: string, layerCount: number) => void;
@@ -30,7 +34,9 @@ const PRESETS = [
 export function CreateView({ onGenerate, onNavigateToScene }: CreateViewProps) {
 	const [description, setDescription] = useState("");
 	const [layerCount, setLayerCount] = useState(5);
-	const [ownedScenes, setOwnedScenes] = useState<OwnedScene[]>(() => getOwnedScenes());
+	const [ownedScenes, setOwnedScenes] = useState<OwnedScene[]>(() =>
+		getOwnedScenes(),
+	);
 
 	const handleGenerate = useCallback(() => {
 		const desc = description.trim();
@@ -50,14 +56,14 @@ export function CreateView({ onGenerate, onNavigateToScene }: CreateViewProps) {
 						Soundscaper
 					</h1>
 					<p className="text-base font-light text-muted-foreground max-w-md mx-auto leading-relaxed">
-						Describe any scene. AI generates a layered ambient soundscape
-						you can mix, customize, and share.
+						Describe any scene. AI generates a layered ambient soundscape you
+						can mix, customize, and share.
 					</p>
 				</div>
 			</div>
 
 			{/* Input */}
-			<Card className="p-6 space-y-5 animate-fade-up" style={{ animationDelay: "0.08s" }}>
+			<Card className="p-6 animate-fade-up" style={{ animationDelay: "0.08s" }}>
 				<p className="text-sm font-semibold text-foreground">
 					Describe your scene
 				</p>
@@ -71,9 +77,7 @@ export function CreateView({ onGenerate, onNavigateToScene }: CreateViewProps) {
 
 				{/* Layer count */}
 				<div className="flex items-center justify-between">
-					<p className="text-xs text-muted-foreground">
-						Number of layers
-					</p>
+					<p className="text-xs text-muted-foreground">Number of layers</p>
 					<div className="flex items-center gap-3">
 						<Button
 							variant="secondary"
@@ -111,7 +115,10 @@ export function CreateView({ onGenerate, onNavigateToScene }: CreateViewProps) {
 			</Card>
 
 			{/* Preset suggestions */}
-			<div className="space-y-4 animate-fade-up" style={{ animationDelay: "0.16s" }}>
+			<div
+				className="space-y-4 animate-fade-up"
+				style={{ animationDelay: "0.16s" }}
+			>
 				<p className="text-xs font-medium tracking-wide uppercase text-muted-foreground text-center">
 					Try a preset
 				</p>
@@ -131,7 +138,10 @@ export function CreateView({ onGenerate, onNavigateToScene }: CreateViewProps) {
 
 			{/* My Soundscapes */}
 			{ownedScenes.length > 0 && (
-				<div className="space-y-4 animate-fade-up" style={{ animationDelay: "0.24s" }}>
+				<div
+					className="space-y-4 animate-fade-up"
+					style={{ animationDelay: "0.24s" }}
+				>
 					<p className="text-xs font-medium tracking-wide uppercase text-muted-foreground">
 						My Soundscapes
 					</p>
@@ -146,11 +156,11 @@ export function CreateView({ onGenerate, onNavigateToScene }: CreateViewProps) {
 									<div className="flex items-center gap-3 min-w-0">
 										<WaveformIcon size={16} className="text-primary shrink-0" />
 										<div className="min-w-0">
-											<p className="text-sm font-medium text-foreground truncate">
+											<p className="text-sm font-medium text-foreground truncate mb-1">
 												{scene.title}
 											</p>
 											<p className="text-xs text-muted-foreground flex items-center gap-1">
-												<ClockIcon size={10} />
+												<ClockIcon size={13} />
 												{new Date(scene.createdAt).toLocaleDateString()}
 											</p>
 										</div>

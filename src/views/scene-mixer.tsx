@@ -20,6 +20,7 @@ import {
 } from "@phosphor-icons/react";
 import { LayerCard } from "../components/layer-card";
 import { PlaybackEngine } from "../lib/playback-engine";
+import { useSession } from "../lib/auth-client";
 import { isOwnedScene, addOwnedScene, updateOwnedScene } from "../lib/owned-scenes";
 
 interface SceneMixerProps {
@@ -51,6 +52,7 @@ export function SceneMixer({
 	const [generationTriggered, setGenerationTriggered] = useState(false);
 	const engineRef = useRef<PlaybackEngine | null>(null);
 
+	const { data: session } = useSession();
 	const isOwner = isOwnedScene(sceneId);
 
 	const agent = useAgent<SceneAgent, SceneState>({
@@ -72,8 +74,12 @@ export function SceneMixer({
 			setGenerationTriggered(true);
 			addOwnedScene(sceneId, initialPrompt.slice(0, 50), new Date().toISOString());
 			agent.call("generateScene", [initialPrompt, initialLayerCount ?? 5]);
+			// Claim for signed-in user
+			if (session?.user?.id) {
+				agent.call("claimScene", [session.user.id]);
+			}
 		}
-	}, [isNew, connected, initialPrompt, generationTriggered, sceneId, agent]);
+	}, [isNew, connected, initialPrompt, generationTriggered, sceneId, agent, session?.user?.id]);
 
 	// Sync scene title to localStorage when it changes
 	useEffect(() => {
@@ -237,6 +243,9 @@ export function SceneMixer({
 				const { sourceSceneId, sourceTitle, sourceLayers } =
 					JSON.parse(forkData);
 				agent.call("initFromFork", [sourceSceneId, sourceTitle, sourceLayers]);
+				if (session?.user?.id) {
+					agent.call("claimScene", [session.user.id]);
+				}
 				sessionStorage.removeItem(`fork:${sceneId}`);
 				addOwnedScene(sceneId, `${sourceTitle} (fork)`, new Date().toISOString());
 				// Clean up URL

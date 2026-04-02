@@ -1,17 +1,17 @@
-import { useState, useCallback } from "react";
+import {
+	ArrowClockwiseIcon,
+	ArrowsHorizontalIcon,
+	CheckIcon,
+	MusicNoteIcon,
+	PencilSimpleIcon,
+	SpeakerHighIcon,
+	SpinnerIcon,
+	TrashIcon,
+} from "@phosphor-icons/react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import {
-	SpeakerHighIcon,
-	ArrowsHorizontalIcon,
-	ArrowClockwiseIcon,
-	TrashIcon,
-	PencilSimpleIcon,
-	CheckIcon,
-	SpinnerIcon,
-	MusicNoteIcon,
-} from "@phosphor-icons/react";
 import type { Layer } from "../agents/scene";
 
 // Perceptually balanced layer hues (oklch hue angles)
@@ -19,16 +19,12 @@ const LAYER_HUES = [290, 195, 145, 25, 330, 60, 235, 110];
 
 export function getLayerColor(index: number, dark = false): string {
 	const hue = LAYER_HUES[index % LAYER_HUES.length];
-	return dark
-		? `oklch(0.7 0.15 ${hue})`
-		: `oklch(0.55 0.2 ${hue})`;
+	return dark ? `oklch(0.7 0.15 ${hue})` : `oklch(0.55 0.2 ${hue})`;
 }
 
 export function getLayerBg(index: number, dark = false): string {
 	const hue = LAYER_HUES[index % LAYER_HUES.length];
-	return dark
-		? `oklch(0.25 0.025 ${hue})`
-		: `oklch(0.97 0.012 ${hue})`;
+	return dark ? `oklch(0.25 0.025 ${hue})` : `oklch(0.97 0.012 ${hue})`;
 }
 
 interface LayerCardProps {
@@ -129,7 +125,6 @@ export function LayerCard({
 							onChange={(e) => setEditPrompt(e.target.value)}
 							onKeyDown={(e) => e.key === "Enter" && handleSavePrompt()}
 							className="flex-1 px-3 py-1.5 rounded-lg bg-muted text-sm text-foreground border border-border focus:outline-none focus:ring-2 focus:ring-ring"
-							autoFocus
 						/>
 						<Button
 							variant="secondary"

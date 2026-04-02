@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
 	MoonIcon,
 	SignOutIcon,
@@ -6,7 +5,9 @@ import {
 	WaveformIcon,
 } from "@phosphor-icons/react";
 import { Suspense, useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { signIn, signOut, useSession } from "./lib/auth-client";
+import { useAutoClaimScenes } from "./lib/use-auto-claim";
 import { CreateView } from "./views/create";
 import { SceneMixer } from "./views/scene-mixer";
 
@@ -61,8 +62,8 @@ function CloudflareLogo({ className }: { className?: string }) {
 }
 
 function ModeToggle() {
-	const [dark, setDark] = useState(
-		() => document.documentElement.classList.contains("dark"),
+	const [dark, setDark] = useState(() =>
+		document.documentElement.classList.contains("dark"),
 	);
 
 	const toggle = useCallback(() => {
@@ -150,6 +151,8 @@ export default function App() {
 	const [newScenePrompt, setNewScenePrompt] = useState<string | null>(null);
 	const [newSceneLayerCount, setNewSceneLayerCount] = useState<number>(5);
 
+	useAutoClaimScenes();
+
 	const handleGenerate = useCallback(
 		(description: string, layerCount: number) => {
 			const id = crypto.randomUUID();
@@ -197,11 +200,7 @@ export default function App() {
 						onClick={handleNavigateHome}
 						className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
 					>
-						<WaveformIcon
-							size={22}
-							weight="bold"
-							className="text-primary"
-						/>
+						<WaveformIcon size={22} weight="bold" className="text-primary" />
 						<span className="text-base font-bold tracking-tight text-foreground">
 							Soundscaper
 						</span>
