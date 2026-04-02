@@ -7,6 +7,7 @@ import {
 } from "@phosphor-icons/react";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 import { signIn, signOut, useSession } from "./lib/auth-client";
 import { useAutoClaimScenes } from "./lib/use-auto-claim";
 import { CreateView } from "./views/create";
@@ -279,6 +280,7 @@ export default function App() {
           )}
         </Suspense>
       </main>
+      <Toaster />
     </div>
   );
 }

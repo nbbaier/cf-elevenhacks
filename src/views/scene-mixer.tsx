@@ -13,7 +13,8 @@ import {
   WaveformIcon,
 } from "@phosphor-icons/react";
 import { useAgent } from "agents/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +27,7 @@ import {
   updateOwnedScene,
 } from "../lib/owned-scenes";
 import { PlaybackEngine } from "../lib/playback-engine";
+import { throttle } from "../lib/throttle";
 
 interface SceneMixerProps {
   initialLayerCount?: number;
@@ -158,21 +160,37 @@ export function SceneMixer({
     }
   }, [layers]);
 
-  // Sync layer settings to playback engine
+  // Throttled agent sync for sliders (immediate local audio, batched network)
+  const syncVolume = useMemo(
+    () =>
+      throttle((id: string, volume: number) => {
+        agent.call("updateLayer", [id, { volume }]);
+      }, 100),
+    [agent]
+  );
+
+  const syncPan = useMemo(
+    () =>
+      throttle((id: string, pan: number) => {
+        agent.call("updateLayer", [id, { pan }]);
+      }, 100),
+    [agent]
+  );
+
   const handleVolumeChange = useCallback(
     (id: string, volume: number) => {
       engineRef.current?.updateLayerVolume(id, volume);
-      agent.call("updateLayer", [id, { volume }]);
+      syncVolume(id, volume);
     },
-    [agent]
+    [syncVolume]
   );
 
   const handlePanChange = useCallback(
     (id: string, pan: number) => {
       engineRef.current?.updateLayerPan(id, pan);
-      agent.call("updateLayer", [id, { pan }]);
+      syncPan(id, pan);
     },
-    [agent]
+    [syncPan]
   );
 
   const handleToggle = useCallback(
@@ -184,17 +202,25 @@ export function SceneMixer({
   );
 
   const handleRegenerate = useCallback(
-    (id: string, newPrompt?: string) => {
-      engineRef.current?.removeLayer(id);
-      agent.call("regenerateLayer", [id, newPrompt]);
+    async (id: string, newPrompt?: string) => {
+      try {
+        engineRef.current?.removeLayer(id);
+        await agent.call("regenerateLayer", [id, newPrompt]);
+      } catch {
+        toast.error("Failed to regenerate layer");
+      }
     },
     [agent]
   );
 
   const handleRemove = useCallback(
-    (id: string) => {
-      engineRef.current?.removeLayer(id);
-      agent.call("removeLayer", [id]);
+    async (id: string) => {
+      try {
+        engineRef.current?.removeLayer(id);
+        await agent.call("removeLayer", [id]);
+      } catch {
+        toast.error("Failed to remove layer");
+      }
     },
     [agent]
   );
@@ -206,10 +232,14 @@ export function SceneMixer({
       return;
     }
 
-    await agent.call("addLayer", [prompt, name, addLayerType]);
-    setAddLayerPrompt("");
-    setAddLayerName("");
-    setShowAddLayer(false);
+    try {
+      await agent.call("addLayer", [prompt, name, addLayerType]);
+      setAddLayerPrompt("");
+      setAddLayerName("");
+      setShowAddLayer(false);
+    } catch {
+      toast.error("Failed to add layer");
+    }
   }, [agent, addLayerPrompt, addLayerName, addLayerType]);
 
   const handlePlayPause = useCallback(() => {
@@ -228,42 +258,46 @@ export function SceneMixer({
   }, [playing]);
 
   const handleShare = useCallback(async () => {
-    await agent.call("publish", []);
-    const url = `${window.location.origin}/scene/${sceneId}`;
-    setShareUrl(url);
     try {
-      await navigator.clipboard.writeText(url);
-    } catch {}
+      await agent.call("publish", []);
+      const url = `${window.location.origin}/scene/${sceneId}`;
+      setShareUrl(url);
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {}
+      toast.success("Scene published and link copied");
+    } catch {
+      toast.error("Failed to publish scene");
+    }
   }, [agent, sceneId]);
 
   const handleUnpublish = useCallback(async () => {
-    await agent.call("unpublish", []);
-    setShareUrl(null);
+    try {
+      await agent.call("unpublish", []);
+      setShareUrl(null);
+      toast.success("Scene unpublished");
+    } catch {
+      toast.error("Failed to unpublish scene");
+    }
   }, [agent]);
 
   const handleFork = useCallback(async () => {
-    const data = (await agent.call("getSceneData", [])) as {
-      scene: SceneState["scene"];
-      layers: Layer[];
-    };
-    if (!data.scene) {
-      return;
-    }
+    try {
+      const data = (await agent.call("getSceneData", [])) as {
+        scene: SceneState["scene"];
+        layers: Layer[];
+      };
+      if (!data.scene) {
+        return;
+      }
 
-    const newId = crypto.randomUUID();
-    addOwnedScene(
-      newId,
-      `${data.scene.title} (fork)`,
-      new Date().toISOString()
-    );
+      const newId = crypto.randomUUID();
+      addOwnedScene(
+        newId,
+        `${data.scene.title} (fork)`,
+        new Date().toISOString()
+      );
 
-    // Connect to the new scene agent and init from fork
-    // We'll navigate to the new scene - the SceneMixer will handle it
-    const forkAgent = new Promise<void>((resolve) => {
-      const _tempAgent = document.createElement("div");
-      // Navigate to the fork and let the new SceneMixer init it
-      window.history.pushState({}, "", `/scene/${newId}`);
-      // Store fork data for the new scene to pick up
       sessionStorage.setItem(
         `fork:${newId}`,
         JSON.stringify({
@@ -272,11 +306,11 @@ export function SceneMixer({
           sourceLayers: data.layers,
         })
       );
-      resolve();
-    });
 
-    await forkAgent;
-    window.location.href = `/scene/${newId}?fork=true`;
+      window.location.href = `/scene/${newId}?fork=true`;
+    } catch {
+      toast.error("Failed to fork scene");
+    }
   }, [agent]);
 
   const handleSaveTitle = useCallback(() => {
