@@ -441,34 +441,7 @@ export function SceneMixer({
       )}
 
       {/* Generation progress */}
-      {generating && progress && (
-        <Surface className="p-4 rounded-xl ring ring-kumo-line">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <SpinnerIcon
-                size={16}
-                className="animate-spin text-kumo-accent"
-              />
-              <Text size="sm" bold>
-                Generating soundscape...
-              </Text>
-            </div>
-            <div className="w-full bg-kumo-elevated rounded-full h-2">
-              <div
-                className="bg-kumo-accent h-2 rounded-full transition-all duration-500"
-                style={{
-                  width: `${(progress.completed / progress.total) * 100}%`
-                }}
-              />
-            </div>
-            <Text size="xs" variant="secondary">
-              {progress.completed} of {progress.total} layers generated
-            </Text>
-          </div>
-        </Surface>
-      )}
-
-      {generating && !progress && (
+      {generating && (
         <Surface className="p-4 rounded-xl ring ring-kumo-line">
           <div className="flex items-center gap-3">
             <SpinnerIcon
@@ -476,7 +449,11 @@ export function SceneMixer({
               className="animate-spin text-kumo-accent"
             />
             <Text size="sm" variant="secondary">
-              AI is designing your soundscape...
+              {!progress
+                ? "AI is designing your soundscape..."
+                : progress.completed === 0
+                  ? "Generating audio for all layers..."
+                  : `${progress.completed} of ${progress.total} layers ready`}
             </Text>
           </div>
         </Surface>

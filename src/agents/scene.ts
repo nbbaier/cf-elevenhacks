@@ -115,26 +115,18 @@ export class SceneAgent extends Agent<Env, SceneState> {
               );
 
         layers[i] = { ...layers[i], r2Key: gen.r2Key, duration: gen.duration };
-        completed++;
-
-        this.setState({
-          ...this.state,
-          scene,
-          layers: [...layers],
-          generating: true,
-          generationProgress: { completed, total: layers.length }
-        });
       } catch (e) {
         console.error(`Failed to generate layer ${layer.name}:`, e);
-        completed++;
-        this.setState({
-          ...this.state,
-          scene,
-          layers: [...layers],
-          generating: true,
-          generationProgress: { completed, total: layers.length }
-        });
       }
+
+      completed++;
+      this.setState({
+        ...this.state,
+        scene,
+        layers: [...layers],
+        generating: true,
+        generationProgress: { completed, total: layers.length }
+      });
     });
 
     await Promise.all(promises);
