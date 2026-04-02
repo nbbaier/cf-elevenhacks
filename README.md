@@ -1,108 +1,105 @@
-<p align="center">
-  <a href="https://elevenlabs.io"><img src="https://img.shields.io/badge/ElevenLabs-000?logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMzIgMzIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3QgeD0iMTEiIHk9IjQiIHdpZHRoPSIzLjUiIGhlaWdodD0iMjQiIHJ4PSIxLjc1IiBmaWxsPSJ3aGl0ZSIvPjxyZWN0IHg9IjE3LjUiIHk9IjQiIHdpZHRoPSIzLjUiIGhlaWdodD0iMjQiIHJ4PSIxLjc1IiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==&logoColor=white&style=for-the-badge" alt="ElevenLabs" height="32"/></a>&nbsp;
-  <a href="https://developers.cloudflare.com/agents/"><img src="https://img.shields.io/badge/Cloudflare_Agents-F38020?logo=cloudflare&logoColor=white&style=for-the-badge" alt="Cloudflare Agents" height="32"/></a>
-</p>
+# Soundscaper
 
-# ElevenLabs × Cloudflare Agents
+AI-powered ambient soundscape generator. Describe a scene in natural language and get a layered, mixable soundscape you can customize, save, and share.
 
-Hackathon starter kit combining [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/) with [ElevenLabs](https://elevenlabs.io/) APIs. Four demos in one app — voice chat with speech-to-text, soundscape generation, AI character creation, and music composition.
+Built with [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/), [ElevenLabs](https://elevenlabs.io/) APIs, and [Workers AI](https://developers.cloudflare.com/workers-ai/).
+
+## How it works
+
+1. **Describe a scene** — e.g. "rainy Tokyo street at night"
+2. **AI decomposes it** — Workers AI breaks the description into 4-6 distinct sound layers
+3. **Audio generation** — ElevenLabs generates loopable ambient sounds for each layer (and optional background music)
+4. **Mix and customize** — adjust volume, panning, toggle layers, edit prompts, add or remove layers
+5. **Save and share** — publish your soundscape with a shareable link; others can listen and fork it
 
 ## Quick start
 
 ```bash
-npm install
+bun install
 ```
 
-Create a `.env` file with your ElevenLabs API key (get one free at [elevenlabs.io](https://elevenlabs.io/)):
+Create a `.env` file:
 
 ```
 ELEVENLABS_API_KEY=your-key-here
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+BETTER_AUTH_SECRET=your-secret
 ```
 
 ```bash
-npm start
+bun run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173).
 
-## Demos
+## Tech stack
 
-### Voice Chat
+- **Frontend:** React 19, Tailwind CSS, shadcn/ui, Web Audio API
+- **Backend:** Cloudflare Workers, Durable Objects, R2 (audio storage), D1 (auth database)
+- **AI:** Workers AI (scene decomposition), ElevenLabs Sound Effects API, ElevenLabs Music API
+- **Auth:** Better Auth with Google OAuth, Drizzle ORM
 
-AI chat agent powered by Workers AI. Every response is automatically spoken aloud via ElevenLabs TTS. Tap the mic to speak — audio streams to ElevenLabs Realtime STT via a WebSocket proxy through the agent, with live partial transcripts as you talk. Pick from available ElevenLabs voices.
+## Features
 
-**ElevenLabs APIs:** Text-to-Speech, Realtime Speech-to-Text, Voice Search
-
-### Soundscape Builder
-
-Describe a scene and the AI expands it into narration + ambient sound effect prompts. ElevenLabs generates the narration (TTS) and each ambient layer (Sound Effects API) in parallel. Play them together to hear the full scene.
-
-**ElevenLabs APIs:** Text-to-Speech, Text-to-Sound-Effects
-
-### Character Creator
-
-Design a custom AI character in two steps: describe a personality (Workers AI generates a system prompt) and a voice (ElevenLabs Voice Design generates previews). Pick your favorite voice, name the character, then chat with them — every response spoken in the custom voice.
-
-**ElevenLabs APIs:** Voice Design, Voice Creation, Text-to-Speech
-
-### Music Studio
-
-Compose original music from a text prompt. Choose duration (15s–2min), toggle instrumental mode, and ElevenLabs generates a full track. Build a library of saved tracks.
-
-**ElevenLabs APIs:** Music Composition
+- **Scene generation** from natural language with configurable layer count (4-6)
+- **Per-layer mixing** — volume, stereo panning, enable/disable
+- **Seamless looping** with crossfade via Web Audio API
+- **Layer editing** — edit prompts and regenerate, add new layers, remove layers
+- **Persistence** — localStorage for quick access, D1 for authenticated users
+- **Sharing** — publish scenes with a link, fork others' creations with attribution
+- **Optional auth** — scenes work without login; Google OAuth to save across devices
 
 ## Project structure
 
 ```
 src/
-  server.ts              # Worker entry — exports agents, routes requests
+  server.ts                 # Worker entry, API routes, audio serving
   agents/
-    voice-chat.ts        # AIChatAgent + TTS + realtime STT WebSocket proxy
-    soundscape.ts        # Agent with scene expansion + SFX generation
-    character.ts         # AIChatAgent with voice design + character chat
-    music.ts             # Agent with music composition + track library
-  lib/
-    elevenlabs.ts        # Shared client factory + audio encoding
+    scene.ts                # SceneAgent — per-scene Durable Object
+    gallery.ts              # GalleryAgent — published scenes registry
+  views/
+    create.tsx              # Home/scene creation
+    scene-mixer.tsx         # Scene editor with layer controls
+    my-scenes.tsx           # User's saved scenes
   components/
-    audio-player.tsx     # Reusable play/speak buttons
-  tabs/
-    voice-chat.tsx       # Chat UI with mic input + auto-speak
-    soundscape.tsx       # Scene builder with layered audio
-    character.tsx        # Two-phase: design then chat
-    music.tsx            # Compose + library UI
-  app.tsx                # Tab shell
-  client.tsx             # React entry
-  styles.css             # Tailwind + Kumo
+    layer-card.tsx          # Layer control card (volume, pan, edit, remove)
+    animated-waveform.tsx   # Playback visualization
+    ui/                     # Base UI components
+  services/
+    decomposition.ts        # Workers AI scene breakdown
+    audio-generation.ts     # ElevenLabs API + R2 storage
+  lib/
+    auth.ts                 # Better Auth server config
+    auth-client.ts          # Client-side auth hooks
+    auth-schema.ts          # Drizzle schema
+    elevenlabs.ts           # ElevenLabs SDK client
+    playback-engine.ts      # Web Audio API mixing engine
+    owned-scenes.ts         # localStorage persistence
+    use-auto-claim.ts       # Auto-claim scenes on login
+  app.tsx                   # SPA router + header
+  client.tsx                # React entry
+  styles.css                # Tailwind + animations
 ```
 
 ## Agents SDK features used
 
-- **`AIChatAgent`** — persistent AI chat with streaming (Voice Chat, Character)
-- **`Agent`** — stateful Durable Object with RPC (Soundscape, Music)
-- **`@callable()`** — typed server methods callable from the browser
+- **`Agent`** — stateful Durable Objects for per-scene isolation (SceneAgent, GalleryAgent)
+- **`@callable()`** — typed RPC methods callable from the browser
 - **`setState` / `useAgent`** — real-time state sync between agent and UI
-- **`useAgentChat`** — React hook for chat with streaming, history, and stop/resume
-- **`onMessage`** — custom WebSocket message handling for audio chunk streaming
-
-## Hackathon ideas
-
-- **Text-to-Dialogue** — use `textToDialogue.convert` to generate multi-speaker podcasts
-- **Speech-to-Speech** — record yourself and transform into a character voice
-- **Dubbing** — transcribe → translate → re-voice in another language
-- **Collaborative soundscapes** — multiple users build a scene via shared agent name
-- **Character gallery** — save and share characters via URL
-- **AI DJ** — compose mood-appropriate background music during conversations
 
 ## Deploy
 
 ```bash
-npx wrangler r2 bucket create elevenlabs-audio
-npx wrangler secret put ELEVENLABS_API_KEY
-npm run deploy
+bun x wrangler r2 bucket create elevenlabs-audio
+bun x wrangler secret put ELEVENLABS_API_KEY
+bun x wrangler secret put GOOGLE_CLIENT_ID
+bun x wrangler secret put GOOGLE_CLIENT_SECRET
+bun x wrangler secret put BETTER_AUTH_SECRET
+bun run deploy
 ```
 
 ## Links
 
 - [Agents SDK docs](https://developers.cloudflare.com/agents/)
 - [ElevenLabs API reference](https://elevenlabs.io/docs/api-reference)
-- [ElevenLabs JS SDK](https://github.com/elevenlabs/elevenlabs-js)
