@@ -1,10 +1,20 @@
 import { routeAgentRequest } from "agents";
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
+import { z } from "zod/v4";
 import { GalleryAgent } from "./agents/gallery";
 import { SceneAgent } from "./agents/scene";
 import { createAuth } from "./lib/auth";
 import { userScenes } from "./lib/auth-schema";
+
+const claimScenesSchema = z.object({
+  sceneIds: z.array(z.string().uuid()).min(1).max(50),
+});
+
+const upsertSceneSchema = z.object({
+  sceneId: z.string().uuid(),
+  title: z.string().min(1).max(200),
+});
 
 // biome-ignore lint/performance/noBarrelFile: Cloudflare requires these Durable Object exports from the Worker entry module.
 export { GalleryAgent, SceneAgent };
@@ -27,10 +37,11 @@ export default {
         return new Response("Unauthorized", { status: 401 });
       }
 
-      const { sceneIds } = (await request.json()) as { sceneIds: string[] };
-      if (!Array.isArray(sceneIds) || sceneIds.length === 0) {
-        return new Response("Bad request", { status: 400 });
+      const parsed = claimScenesSchema.safeParse(await request.json());
+      if (!parsed.success) {
+        return Response.json({ error: parsed.error.message }, { status: 400 });
       }
+      const { sceneIds } = parsed.data;
 
       const db = drizzle(env.AUTH_DB);
       const results: { sceneId: string; claimed: boolean }[] = [];
@@ -52,8 +63,8 @@ export default {
                   createdAt: new Date(data.scene.createdAt),
                 })
                 .onConflictDoUpdate({
-                  target: userScenes.sceneId,
-                  set: { userId: session.user.id, title: data.scene.title },
+                  target: [userScenes.sceneId, userScenes.userId],
+                  set: { title: data.scene.title },
                 });
             }
           }
@@ -74,13 +85,11 @@ export default {
         return new Response("Unauthorized", { status: 401 });
       }
 
-      const { sceneId, title } = (await request.json()) as {
-        sceneId: string;
-        title: string;
-      };
-      if (!(sceneId && title)) {
-        return new Response("Bad request", { status: 400 });
+      const parsed = upsertSceneSchema.safeParse(await request.json());
+      if (!parsed.success) {
+        return Response.json({ error: parsed.error.message }, { status: 400 });
       }
+      const { sceneId, title } = parsed.data;
 
       const db = drizzle(env.AUTH_DB);
       await db
@@ -92,7 +101,7 @@ export default {
           createdAt: new Date(),
         })
         .onConflictDoUpdate({
-          target: userScenes.sceneId,
+          target: [userScenes.sceneId, userScenes.userId],
           set: { title },
         });
 

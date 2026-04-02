@@ -15,6 +15,13 @@
       "when": 1775115262044,
       "tag": "0001_glamorous_centennial",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1775142987276,
+      "tag": "0002_remarkable_northstar",
+      "breakpoints": true
     }
   ]
 }

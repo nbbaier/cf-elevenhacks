@@ -64,7 +64,11 @@ Respond with ONLY valid JSON, no markdown fences:
   } catch {
     return {
       title: description.slice(0, 50),
-      layers: [{ name: "Ambient", prompt: description, type: "sfx" as const }],
+      layers: Array.from({ length: layerCount }, (_, i) => ({
+        name: layerCount === 1 ? "Ambient" : `Ambient ${i + 1}`,
+        prompt: description,
+        type: "sfx" as const,
+      })),
     };
   }
 }

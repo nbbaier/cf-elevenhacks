@@ -11,6 +11,7 @@ import {
   SpeakerHighIcon,
   SpinnerIcon,
   WaveformIcon,
+  XCircleIcon,
 } from "@phosphor-icons/react";
 import { useAgent } from "agents/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -313,6 +314,10 @@ export function SceneMixer({
     }
   }, [agent]);
 
+  const handleCancelGeneration = useCallback(() => {
+    agent.call("cancelGeneration", []);
+  }, [agent]);
+
   const handleSaveTitle = useCallback(() => {
     if (titleDraft.trim()) {
       agent.call("updateScene", [{ title: titleDraft.trim() }]);
@@ -350,7 +355,7 @@ export function SceneMixer({
         window.history.replaceState({}, "", `/scene/${sceneId}`);
       }
     }
-  }, [connected, sceneId, agent, session.user.id]);
+  }, [connected, sceneId, agent, session?.user?.id]);
 
   const readyLayers = layers.filter((l) => l.r2Key);
 
@@ -540,13 +545,23 @@ export function SceneMixer({
         >
           <div className="flex items-center gap-3">
             <SpinnerIcon className="animate-spin text-primary" size={18} />
-            <p className="font-medium text-foreground text-sm">
+            <p className="flex-1 font-medium text-foreground text-sm">
               {progress
                 ? progress.completed === 0
                   ? "Generating audio layers..."
                   : `${progress.completed} of ${progress.total} layers ready`
                 : "Designing your soundscape..."}
             </p>
+            {isOwner && (
+              <Button
+                onClick={handleCancelGeneration}
+                size="sm"
+                variant="ghost"
+              >
+                <XCircleIcon size={16} />
+                Cancel
+              </Button>
+            )}
           </div>
         </Card>
       )}

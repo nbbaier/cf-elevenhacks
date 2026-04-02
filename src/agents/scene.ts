@@ -28,6 +28,7 @@ export interface SceneData {
 export interface SceneState {
   generating: boolean;
   generationProgress: { completed: number; total: number } | null;
+  generationTaskId: string | null;
   layers: Layer[];
   scene: SceneData | null;
 }
@@ -43,17 +44,34 @@ export class SceneAgent extends Agent<Env, SceneState> {
     layers: [],
     generating: false,
     generationProgress: null,
+    generationTaskId: null,
   };
+
+  /** Cancel any in-progress generation. */
+  @callable()
+  cancelGeneration(): void {
+    if (!this.state.generating) {
+      return;
+    }
+    this.setState({
+      ...this.state,
+      generating: false,
+      generationProgress: null,
+      generationTaskId: null,
+    });
+  }
 
   /** Generate a full scene from a text description. */
   @callable()
   async generateScene(description: string, layerCount = 5): Promise<void> {
     const sceneId = this.name;
+    const taskId = crypto.randomUUID();
 
     this.setState({
       ...this.state,
       generating: true,
       generationProgress: { completed: 0, total: layerCount },
+      generationTaskId: taskId,
     });
 
     // Decompose scene into layer prompts via Workers AI
@@ -94,6 +112,11 @@ export class SceneAgent extends Agent<Env, SceneState> {
     // Generate audio for all layers in parallel
     let completed = 0;
     const promises = layers.map(async (layer, i) => {
+      // Check for cancellation before starting each layer
+      if (this.state.generationTaskId !== taskId) {
+        return;
+      }
+
       try {
         const gen =
           layer.type === "music"
@@ -109,6 +132,11 @@ export class SceneAgent extends Agent<Env, SceneState> {
                 layer.id,
                 layer.prompt
               );
+
+        // Check for cancellation after generation completes
+        if (this.state.generationTaskId !== taskId) {
+          return;
+        }
 
         layers[i] = { ...layers[i], r2Key: gen.r2Key, duration: gen.duration };
       } catch (e) {
@@ -127,13 +155,17 @@ export class SceneAgent extends Agent<Env, SceneState> {
 
     await Promise.all(promises);
 
-    this.setState({
-      ...this.state,
-      scene,
-      layers: [...layers],
-      generating: false,
-      generationProgress: null,
-    });
+    // Only finalize if this task wasn't cancelled
+    if (this.state.generationTaskId === taskId) {
+      this.setState({
+        ...this.state,
+        scene,
+        layers: [...layers],
+        generating: false,
+        generationProgress: null,
+        generationTaskId: null,
+      });
+    }
   }
 
   /** Add a single new layer with audio generation. */
@@ -144,6 +176,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
     type: "sfx" | "music" = "sfx"
   ): Promise<void> {
     const layerId = crypto.randomUUID();
+    const taskId = crypto.randomUUID();
     const layer: Layer = {
       id: layerId,
       prompt,
@@ -161,6 +194,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       ...this.state,
       layers: [...this.state.layers, layer],
       generating: true,
+      generationTaskId: taskId,
     });
 
     try {
@@ -179,6 +213,10 @@ export class SceneAgent extends Agent<Env, SceneState> {
               prompt
             );
 
+      if (this.state.generationTaskId !== taskId) {
+        return;
+      }
+
       this.setState({
         ...this.state,
         layers: this.state.layers.map((l) =>
@@ -187,14 +225,20 @@ export class SceneAgent extends Agent<Env, SceneState> {
             : l
         ),
         generating: false,
+        generationTaskId: null,
       });
     } catch (e) {
       console.error("Failed to generate layer:", e);
-      this.setState({ ...this.state, generating: false });
+      if (this.state.generationTaskId === taskId) {
+        this.setState({
+          ...this.state,
+          generating: false,
+          generationTaskId: null,
+        });
+      }
     }
   }
 
-  /** Regenerate a layer's audio, optionally with a new prompt. */
   /** Regenerate a layer's audio, optionally with a new prompt. */
   @callable()
   async regenerateLayer(layerId: string, newPrompt?: string): Promise<void> {
@@ -205,6 +249,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
 
     const prompt = newPrompt || layer.prompt;
     const newLayerId = crypto.randomUUID();
+    const taskId = crypto.randomUUID();
     const oldR2Key = layer.r2Key;
 
     // Mark layer as regenerating (clear r2Key, assign new ID)
@@ -213,6 +258,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       layers: this.state.layers.map((l) =>
         l.id === layerId ? { ...l, id: newLayerId, prompt, r2Key: "" } : l
       ),
+      generationTaskId: taskId,
     });
 
     // Delete old audio from R2
@@ -240,6 +286,10 @@ export class SceneAgent extends Agent<Env, SceneState> {
               prompt
             );
 
+      if (this.state.generationTaskId !== taskId) {
+        return;
+      }
+
       this.setState({
         ...this.state,
         layers: this.state.layers.map((l) =>
@@ -247,9 +297,13 @@ export class SceneAgent extends Agent<Env, SceneState> {
             ? { ...l, r2Key: gen.r2Key, duration: gen.duration }
             : l
         ),
+        generationTaskId: null,
       });
     } catch (e) {
       console.error("Failed to regenerate layer:", e);
+      if (this.state.generationTaskId === taskId) {
+        this.setState({ ...this.state, generationTaskId: null });
+      }
     }
   }
 
@@ -400,6 +454,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
       layers: forkedLayers,
       generating: false,
       generationProgress: null,
+      generationTaskId: null,
     });
   }
 }
