@@ -91,11 +91,11 @@ src/
 ## Deploy
 
 ```bash
-bun x wrangler r2 bucket create elevenlabs-audio
-bun x wrangler secret put ELEVENLABS_API_KEY
-bun x wrangler secret put GOOGLE_CLIENT_ID
-bun x wrangler secret put GOOGLE_CLIENT_SECRET
-bun x wrangler secret put BETTER_AUTH_SECRET
+bunx wrangler r2 bucket create elevenlabs-audio
+bunx wrangler secret put ELEVENLABS_API_KEY
+bunx wrangler secret put GOOGLE_CLIENT_ID
+bunx wrangler secret put GOOGLE_CLIENT_SECRET
+bunx wrangler secret put BETTER_AUTH_SECRET
 bun run deploy
 ```
 
