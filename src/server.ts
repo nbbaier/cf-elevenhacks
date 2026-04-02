@@ -9,7 +9,12 @@ export default {
 
     // Serve audio files from R2 at /audio/{r2Key}
     if (url.pathname.startsWith("/audio/")) {
-      const key = decodeURIComponent(url.pathname.slice("/audio/".length));
+      let key: string;
+      try {
+        key = decodeURIComponent(url.pathname.slice("/audio/".length));
+      } catch {
+        return new Response("Bad request", { status: 400 });
+      }
       const object = await env.AUDIO_BUCKET.get(key);
       if (!object) return new Response("Not found", { status: 404 });
 
