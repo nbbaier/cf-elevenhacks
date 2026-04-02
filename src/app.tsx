@@ -1,4 +1,5 @@
 import {
+  GithubLogoIcon,
   ListIcon,
   MoonIcon,
   SignOutIcon,
@@ -244,6 +245,15 @@ export default function App() {
 							<span className="text-xs">×</span>
 							<CloudflareLogo className="h-3" />
 						</div> */}
+            <a
+              aria-label="GitHub repository"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+              href="https://github.com/nbbaier/cf-elevenhacks"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <GithubLogoIcon size={18} />
+            </a>
             <UserMenu />
             <ModeToggle />
           </div>
