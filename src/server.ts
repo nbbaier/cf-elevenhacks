@@ -2,10 +2,12 @@ import { routeAgentRequest } from "agents";
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { z } from "zod/v4";
-import { GalleryAgent } from "./agents/gallery";
-import { SceneAgent } from "./agents/scene";
 import { createAuth } from "./lib/auth";
 import { userScenes } from "./lib/auth-schema";
+
+// biome-ignore lint/performance/noBarrelFile: Cloudflare requires Durable Object exports from the Worker entry module
+export { GalleryAgent } from "./agents/gallery";
+export { SceneAgent } from "./agents/scene";
 
 const claimScenesSchema = z.object({
   sceneIds: z.array(z.string().uuid()).min(1).max(50),
@@ -16,10 +18,8 @@ const upsertSceneSchema = z.object({
   title: z.string().min(1).max(200),
 });
 
-// biome-ignore lint/performance/noBarrelFile: Cloudflare requires these Durable Object exports from the Worker entry module.
-export { GalleryAgent, SceneAgent };
-
 export default {
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Worker router handles many routes
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
 

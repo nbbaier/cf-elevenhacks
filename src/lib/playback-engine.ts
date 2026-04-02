@@ -126,7 +126,9 @@ export class PlaybackEngine {
       source.onended = () => {
         try {
           fadeGain.disconnect();
-        } catch {}
+        } catch {
+          // intentional: disconnect may throw if already disconnected
+        }
       };
     };
 
@@ -141,7 +143,9 @@ export class PlaybackEngine {
     }
     try {
       layer.activeSource?.stop();
-    } catch {}
+    } catch {
+      // intentional: source may already be stopped
+    }
     layer.activeSource = null;
     layer.activeFadeGain = null;
   }
@@ -157,7 +161,9 @@ export class PlaybackEngine {
     try {
       layer.gainNode.disconnect();
       layer.panNode.disconnect();
-    } catch {}
+    } catch {
+      // intentional: nodes may already be disconnected
+    }
     this.layers.delete(id);
   }
 
@@ -249,7 +255,9 @@ export class PlaybackEngine {
       try {
         layer.gainNode.disconnect();
         layer.panNode.disconnect();
-      } catch {}
+      } catch {
+        // intentional: nodes may already be disconnected
+      }
     }
     this.layers.clear();
     this.ctx?.close();

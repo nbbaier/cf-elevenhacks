@@ -135,18 +135,23 @@ export function MockButton({
   variant?: "primary" | "secondary" | "outline";
   style?: CSSProperties;
 }) {
-  const bg =
-    variant === "primary"
-      ? C.primary
-      : variant === "secondary"
-        ? C.muted
-        : "transparent";
-  const color =
-    variant === "primary"
-      ? C.primaryFg
-      : variant === "outline"
-        ? C.mutedFg
-        : C.fg;
+  let bg: string;
+  if (variant === "primary") {
+    bg = C.primary;
+  } else if (variant === "secondary") {
+    bg = C.muted;
+  } else {
+    bg = "transparent";
+  }
+
+  let color: string;
+  if (variant === "primary") {
+    color = C.primaryFg;
+  } else if (variant === "outline") {
+    color = C.mutedFg;
+  } else {
+    color = C.fg;
+  }
   const border = variant === "outline" ? `1px solid ${C.cardBorder}` : "none";
 
   return (
@@ -186,6 +191,7 @@ export function WaveformSvg({
   const bars = [0.4, 0.7, 1.0, 0.8, 0.5, 0.9, 0.6, 0.85, 0.45, 0.75];
   return (
     <svg height={size} viewBox="0 0 24 24" width={size}>
+      <title>Waveform</title>
       {bars.map((h, i) => {
         const animH = animated
           ? h * (0.5 + 0.5 * Math.sin(frame * 0.15 + i * 0.9))
@@ -197,6 +203,7 @@ export function WaveformSvg({
           <rect
             fill={color}
             height={bh}
+            // biome-ignore lint/suspicious/noArrayIndexKey: static array, order never changes
             key={i}
             rx={bw / 2}
             width={bw}
@@ -224,11 +231,14 @@ export function LayerBar({
   generating?: boolean;
   frame?: number;
 }) {
-  const pulse = generating
-    ? 0.4 + 0.3 * Math.sin(frame * 0.15)
-    : enabled
-      ? 1
-      : 0.35;
+  let pulse: number;
+  if (generating) {
+    pulse = 0.4 + 0.3 * Math.sin(frame * 0.15);
+  } else if (enabled) {
+    pulse = 1;
+  } else {
+    pulse = 0.35;
+  }
 
   return (
     <div
@@ -251,6 +261,7 @@ export function LayerBar({
           width: 8,
           height: 8,
           borderRadius: 999,
+          // biome-ignore lint/style/noNestedTernary: three-state dot color
           background: generating ? C.mutedFg : enabled ? color : C.muted,
           flexShrink: 0,
         }}

@@ -38,6 +38,7 @@ interface SceneMixerProps {
   sceneId: string;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: component manages many coordinated states
 export function SceneMixer({
   sceneId,
   isNew,
@@ -120,7 +121,9 @@ export function SceneMixer({
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ sceneId, title: scene.title }),
-      }).catch(() => {});
+      }).catch(() => {
+        // intentional: fire-and-forget sync
+      });
     }
   }, [
     scene?.title,
@@ -265,7 +268,9 @@ export function SceneMixer({
       setShareUrl(url);
       try {
         await navigator.clipboard.writeText(url);
-      } catch {}
+      } catch {
+        // intentional: clipboard write failure is non-critical
+      }
       toast.success("Scene published and link copied");
     } catch {
       toast.error("Failed to publish scene");
@@ -359,6 +364,33 @@ export function SceneMixer({
 
   const readyLayers = layers.filter((l) => l.r2Key);
 
+  let titleMode: "editing" | "editable" | "readonly";
+  if (editingTitle && isOwner) {
+    titleMode = "editing";
+  } else if (isOwner) {
+    titleMode = "editable";
+  } else {
+    titleMode = "readonly";
+  }
+
+  let authorMode: "editing" | "editable" | "readonly";
+  if (editingAuthor && isOwner) {
+    authorMode = "editing";
+  } else if (isOwner) {
+    authorMode = "editable";
+  } else {
+    authorMode = "readonly";
+  }
+
+  let progressText: string;
+  if (!progress) {
+    progressText = "Designing your soundscape...";
+  } else if (progress.completed === 0) {
+    progressText = "Generating audio layers...";
+  } else {
+    progressText = `${progress.completed} of ${progress.total} layers ready`;
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-5 py-8">
       {/* Connection status */}
@@ -396,7 +428,7 @@ export function SceneMixer({
                 size={24}
                 weight="bold"
               />
-              {editingTitle && isOwner ? (
+              {titleMode === "editing" && (
                 <div className="flex flex-1 gap-2">
                   <input
                     autoFocus
@@ -408,18 +440,27 @@ export function SceneMixer({
                     value={titleDraft}
                   />
                 </div>
-              ) : (
-                <h1
-                  className={`font-bold text-foreground text-xl tracking-tight ${isOwner ? "cursor-pointer transition-colors hover:text-primary" : ""}`}
-                  onClick={
-                    isOwner
-                      ? () => {
-                          setTitleDraft(scene.title);
-                          setEditingTitle(true);
-                        }
-                      : undefined
-                  }
+              )}
+              {titleMode === "editable" && (
+                <button
+                  className="cursor-pointer text-left font-bold text-foreground text-xl tracking-tight transition-colors hover:text-primary"
+                  onClick={() => {
+                    setTitleDraft(scene.title);
+                    setEditingTitle(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setTitleDraft(scene.title);
+                      setEditingTitle(true);
+                    }
+                  }}
+                  type="button"
                 >
+                  {scene.title}
+                </button>
+              )}
+              {titleMode === "readonly" && (
+                <h1 className="font-bold text-foreground text-xl tracking-tight">
                   {scene.title}
                 </h1>
               )}
@@ -427,7 +468,7 @@ export function SceneMixer({
 
             {/* Author */}
             <div className="flex items-center gap-2">
-              {editingAuthor && isOwner ? (
+              {authorMode === "editing" && (
                 <div className="flex flex-1 gap-2">
                   <input
                     autoFocus
@@ -440,25 +481,30 @@ export function SceneMixer({
                     value={authorDraft}
                   />
                 </div>
-              ) : (
-                <span
-                  className={`text-muted-foreground text-xs ${
-                    isOwner ? "cursor-pointer hover:text-primary" : ""
-                  }`}
-                  onClick={
-                    isOwner
-                      ? () => {
-                          setAuthorDraft(scene.authorName || "");
-                          setEditingAuthor(true);
-                        }
-                      : undefined
-                  }
+              )}
+              {authorMode === "editable" && (
+                <button
+                  className="cursor-pointer text-left text-muted-foreground text-xs hover:text-primary"
+                  onClick={() => {
+                    setAuthorDraft(scene.authorName || "");
+                    setEditingAuthor(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setAuthorDraft(scene.authorName || "");
+                      setEditingAuthor(true);
+                    }
+                  }}
+                  type="button"
                 >
                   {scene.authorName
                     ? `by ${scene.authorName}`
-                    : isOwner
-                      ? "Click to set your name"
-                      : "Anonymous"}
+                    : "Click to set your name"}
+                </button>
+              )}
+              {authorMode === "readonly" && (
+                <span className="text-muted-foreground text-xs">
+                  {scene.authorName ? `by ${scene.authorName}` : "Anonymous"}
                 </span>
               )}
             </div>
@@ -523,7 +569,9 @@ export function SceneMixer({
                 <Button
                   onClick={() => {
                     const url = `${window.location.origin}/scene/${sceneId}`;
-                    navigator.clipboard.writeText(url).catch(() => {});
+                    navigator.clipboard.writeText(url).catch(() => {
+                      // intentional: clipboard write failure is non-critical
+                    });
                     setShareUrl(url);
                   }}
                   size="sm"
@@ -546,11 +594,7 @@ export function SceneMixer({
           <div className="flex items-center gap-3">
             <SpinnerIcon className="animate-spin text-primary" size={18} />
             <p className="flex-1 font-medium text-foreground text-sm">
-              {progress
-                ? progress.completed === 0
-                  ? "Generating audio layers..."
-                  : `${progress.completed} of ${progress.total} layers ready`
-                : "Designing your soundscape..."}
+              {progressText}
             </p>
             {isOwner && (
               <Button
