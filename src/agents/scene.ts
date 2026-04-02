@@ -114,13 +114,13 @@ export class SceneAgent extends Agent<Env, SceneState> {
                 layer.prompt
               );
 
-        layers[i] = { ...layers[i], r2Key: gen.r2Key, duration: gen.duration };
         completed++;
-
         this.setState({
           ...this.state,
           scene,
-          layers: [...layers],
+          layers: this.state.layers.map((l) =>
+            l.id === layer.id ? { ...l, r2Key: gen.r2Key, duration: gen.duration } : l
+          ),
           generating: true,
           generationProgress: { completed, total: layers.length }
         });
@@ -129,8 +129,6 @@ export class SceneAgent extends Agent<Env, SceneState> {
         completed++;
         this.setState({
           ...this.state,
-          scene,
-          layers: [...layers],
           generating: true,
           generationProgress: { completed, total: layers.length }
         });
@@ -142,7 +140,7 @@ export class SceneAgent extends Agent<Env, SceneState> {
     this.setState({
       ...this.state,
       scene,
-      layers: [...layers],
+      layers: this.state.layers,
       generating: false,
       generationProgress: null
     });
