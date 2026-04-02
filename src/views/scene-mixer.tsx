@@ -262,7 +262,7 @@ export function SceneMixer({
 					<CircleIcon
 						size={8}
 						weight="fill"
-						className={connected ? "text-green-500" : "text-destructive"}
+						className={connected ? "text-primary" : "text-destructive"}
 					/>
 					<span className="text-xs text-muted-foreground">
 						{connected ? "Connected" : "Connecting..."}

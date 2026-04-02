@@ -114,7 +114,7 @@ export function CreateView({ onGenerate, onNavigateToScene }: CreateViewProps) {
 					{PRESETS.map((preset) => (
 						<Button
 							key={preset}
-							variant="outline"
+							variant="secondary"
 							size="sm"
 							onClick={() => setDescription(preset)}
 						>

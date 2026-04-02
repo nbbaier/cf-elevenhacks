@@ -15,7 +15,7 @@ import {
 import type { Layer } from "../agents/scene";
 
 // Perceptually balanced layer hues (oklch hue angles)
-const LAYER_HUES = [275, 195, 145, 25, 330, 60, 235, 110];
+const LAYER_HUES = [290, 195, 145, 25, 330, 60, 235, 110];
 
 export function getLayerColor(index: number, dark = false): string {
 	const hue = LAYER_HUES[index % LAYER_HUES.length];
