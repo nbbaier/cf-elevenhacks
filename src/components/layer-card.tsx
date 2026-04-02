@@ -14,8 +14,19 @@ import {
 } from "@phosphor-icons/react";
 import type { Layer } from "../agents/scene";
 
+// Perceptually balanced layer hues (oklch hue angles)
+const LAYER_HUES = [275, 195, 145, 25, 330, 60, 235, 110];
+
+export function getLayerColor(index: number, dark = false): string {
+	const hue = LAYER_HUES[index % LAYER_HUES.length];
+	return dark
+		? `oklch(0.7 0.15 ${hue})`
+		: `oklch(0.55 0.2 ${hue})`;
+}
+
 interface LayerCardProps {
 	layer: Layer;
+	colorIndex: number;
 	isOwner: boolean;
 	onVolumeChange: (id: string, volume: number) => void;
 	onPanChange: (id: string, pan: number) => void;
@@ -26,6 +37,7 @@ interface LayerCardProps {
 
 export function LayerCard({
 	layer,
+	colorIndex,
 	isOwner,
 	onVolumeChange,
 	onPanChange,
@@ -36,6 +48,8 @@ export function LayerCard({
 	const [editing, setEditing] = useState(false);
 	const [editPrompt, setEditPrompt] = useState(layer.prompt);
 	const isLoading = !layer.r2Key;
+	const isDark = document.documentElement.classList.contains("dark");
+	const layerColor = getLayerColor(colorIndex, isDark);
 
 	const handleSavePrompt = useCallback(() => {
 		if (editPrompt.trim() && editPrompt !== layer.prompt) {
@@ -46,9 +60,10 @@ export function LayerCard({
 
 	return (
 		<Card
-			className={`p-4 transition-opacity ${
+			className={`p-4 transition-opacity border-l-[3px] ${
 				!layer.enabled ? "opacity-50" : ""
 			}`}
+			style={{ borderLeftColor: layerColor }}
 		>
 			<div className="space-y-3">
 				{/* Header row */}
@@ -57,12 +72,14 @@ export function LayerCard({
 						{layer.type === "music" ? (
 							<MusicNoteIcon
 								size={16}
-								className="text-primary shrink-0"
+								className="shrink-0"
+								style={{ color: layerColor }}
 							/>
 						) : (
 							<SpeakerHighIcon
 								size={16}
-								className="text-primary shrink-0"
+								className="shrink-0"
+								style={{ color: layerColor }}
 							/>
 						)}
 						<span className="text-sm font-semibold text-foreground truncate">

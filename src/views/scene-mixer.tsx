@@ -452,10 +452,11 @@ export function SceneMixer({
 					<p className="text-sm font-semibold text-foreground">
 						{isOwner ? `Layers (${layers.length})` : `${layers.length} Layers`}
 					</p>
-					{layers.map((layer) => (
+					{layers.map((layer, index) => (
 						<LayerCard
 							key={layer.id}
 							layer={layer}
+							colorIndex={index}
 							isOwner={isOwner}
 							onVolumeChange={handleVolumeChange}
 							onPanChange={handlePanChange}

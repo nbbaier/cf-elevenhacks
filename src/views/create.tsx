@@ -10,6 +10,7 @@ import {
 	ClockIcon,
 	TrashIcon,
 } from "@phosphor-icons/react";
+import { AnimatedWaveform } from "../components/animated-waveform";
 import { getOwnedScenes, removeOwnedScene, type OwnedScene } from "../lib/owned-scenes";
 
 interface CreateViewProps {
@@ -41,7 +42,9 @@ export function CreateView({ onGenerate, onNavigateToScene }: CreateViewProps) {
 		<div className="max-w-2xl mx-auto w-full px-5 py-10 space-y-8">
 			{/* Hero */}
 			<div className="text-center space-y-3">
-				<WaveformIcon size={48} className="mx-auto text-primary" />
+				<div className="mx-auto w-fit">
+					<AnimatedWaveform size={48} />
+				</div>
 				<h1 className="text-2xl font-bold text-foreground">Soundscaper</h1>
 				<p className="text-sm text-muted-foreground">
 					Describe any scene and AI will generate a layered ambient soundscape
